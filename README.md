@@ -24,6 +24,7 @@ pip install tqdm einops wandb pydantic pandas
 ## Train
 
 ```bash
+python train.py
 ```
 
 ## Sample
