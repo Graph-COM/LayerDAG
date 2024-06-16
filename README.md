@@ -23,6 +23,8 @@ pip install tqdm einops wandb pydantic pandas
 
 ## Train
 
+To train a LayerDAG model,
+
 ```bash
 python train.py
 ```
