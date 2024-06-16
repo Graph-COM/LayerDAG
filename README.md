@@ -8,6 +8,9 @@
 - [Train](#train)
 - [Sample](#sample)
 - [Eval](#eval)
+- [Frequently Asked Questions](#frequently-asked-questions)
+  * [Q1: libcusparse.so](#q1-libcusparseso)
+- [Citation](#citation)
 
 ## Installation
 
@@ -40,6 +43,22 @@ python train.py
 ```
 
 ## Frequently Asked Questions
+
+### Q1: libcusparse.so
+
+**An error occurs that the program cannot find `libcusparse.so`**, e.g., OSError: libcusparse.so.11: cannot open shared object file: No such file or directory.
+
+To search for the location of it on linux,
+
+```bash
+find /path/to/directory -name libcusparse.so.11 -exec realpath {} \;
+```
+
+where `/path/to/directory` is the directory you want to search. Assume that the search returns `home/miniconda3/envs/GraphMaker/lib/libcusparse.so.11`. Then you need to manually specify the environment variable as follows.
+
+```bash
+export LD_LIBRARY_PATH=home/miniconda3/envs/GraphMaker/lib:$LD_LIBRARY_PATH
+```
 
 ## Citation
 
