@@ -23,6 +23,19 @@ pip install tqdm einops wandb pydantic pandas
 
 ## Train
 
+```bash
+```
+
 ## Sample
 
+```bash
+```
+
 ## Eval
+
+```bash
+```
+
+## Frequently Asked Questions
+
+## Citation
