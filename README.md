@@ -63,4 +63,10 @@ export LD_LIBRARY_PATH=/home/miniconda3/envs/GraphMaker/lib:$LD_LIBRARY_PATH
 ## Citation
 
 ```
+@article{li2024layerdag,
+  title={Layer{DAG}: A Layerwise Autoregressive Diffusion Model of Directed Acyclic Graphs for System},
+  author={Mufei Li and Viraj Shitole and Eli Chien and Changhai Man and Zhaodong Wang and Srinivas and Ying Zhang and Tushar Krishna and Pan Li},
+  journal={ISCA Workshop on Machine Learning for Computer Architecture and Systems},
+  year={2024},
+}
 ```
