@@ -29,7 +29,7 @@ pip install tqdm einops wandb pydantic pandas
 To train a LayerDAG model,
 
 ```bash
-python train.py
+python train.py --config_file configs/LayerDAG/tpu_tile.yaml
 ```
 
 ## Sample
