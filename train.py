@@ -25,6 +25,12 @@ def main(args):
 
     ts = time.strftime('%b%d-%H:%M:%S', time.gmtime())
 
+    wandb.init(
+        project=f'LayerDAG_{dataset}',
+        name=f'{ts}',
+        config=config_df.to_dict(orient='records')[0]
+    )
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
