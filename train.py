@@ -20,6 +20,10 @@ def main(args):
     set_seed(args.seed)
 
     config = load_yaml(args.config_file)
+    dataset = config['general']['dataset']
+    config_df = pd.json_normalize(config, sep='/')
+
+    ts = time.strftime('%b%d-%H:%M:%S', time.gmtime())
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
