@@ -5,6 +5,9 @@
 ## Table of Contents
 
 - [Installation](#installation)
+- [Train](#train)
+- [Sample](#sample)
+- [Eval](#eval)
 
 ## Installation
 
@@ -17,3 +20,9 @@ conda clean --all -y
 pip install dgl==1.1.0+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html
 pip install tqdm einops wandb pydantic pandas
 ```
+
+## Train
+
+## Sample
+
+## Eval
