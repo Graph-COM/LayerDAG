@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from setup_utils import set_seed, load_yaml
+from src.dataset import load_dataset
 
 def main(args):
     torch.set_num_threads(args.num_threads)
@@ -30,6 +31,8 @@ def main(args):
         name=f'{ts}',
         config=config_df.to_dict(orient='records')[0]
     )
+
+    train_set, val_set, _ = load_dataset(dataset)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
