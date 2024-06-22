@@ -10,3 +10,5 @@ def get_tpu_tile():
     train_path = os.path.join(root_path, 'train.pth')
     val_path = os.path.join(root_path, 'val.pth')
     test_path = os.path.join(root_path, 'test.pth')
+
+    print('Loading TPU Tile dataset...')
