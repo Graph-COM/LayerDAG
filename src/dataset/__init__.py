@@ -1,2 +1,7 @@
+from .general import DAGDataset
+
 def load_dataset(dataset_name):
-    return NotImplementedError
+    if dataset_name == 'tpu_tile':
+        pass
+    else:
+        return NotImplementedError
