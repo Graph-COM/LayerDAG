@@ -32,6 +32,7 @@ def main(args):
         config=config_df.to_dict(orient='records')[0]
     )
 
+    # For training the generative model, no need to use the test set.
     train_set, val_set, _ = load_dataset(dataset)
 
 if __name__ == '__main__':
