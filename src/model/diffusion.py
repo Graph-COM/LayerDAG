@@ -60,4 +60,38 @@ class DiscreteDiffusion(nn.Module):
         self.alpha_bars = nn.Parameter(self.alpha_bars, requires_grad=False)
 
     def get_Q(self, alpha, f):
+        """
+        Parameters
+        ----------
+        f : int
+            Index for the attribute
+        """
         return alpha * self.I_list[f] + (1 - alpha) * self.m_list[f]
+
+    def apply_noise(self, z, t=None):
+        if t is None:
+            # Sample a timestep t uniformly.
+            # Note that the notation is slightly inconsistent with the paper.
+            # t=0 corresponds to t=1 in the paper, where corruption has already taken place.
+            t = torch.randint(low=0, high=self.T + 1, size=(1,))
+
+        alpha_bar_t = self.alpha_bars[t.item()]
+
+        if z.ndim == 1:
+            z = z.unsqueeze(-1)
+
+        _, D = z.shape
+        z_t_list = []
+        for d in range(D):
+            Q_bar_t_d = self.get_Q(alpha_bar_t, d)
+            z_one_hot_d = F.one_hot(z[:, d], num_classes=self.num_classes_list[d]).float()
+            prob_z_t_d = z_one_hot_d @ Q_bar_t_d
+            z_t_d = prob_z_t_d.multinomial(1).squeeze(-1)
+            z_t_list.append(z_t_d)
+
+        if D == 1:
+            z_t = z_t_list[0]
+        else:
+            z_t = torch.stack(z_t_list, dim=1)
+
+        return t, z_t
