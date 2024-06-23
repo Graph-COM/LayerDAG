@@ -18,3 +18,10 @@ class DiscreteDiffusion(nn.Module):
             Constant in noise schedule
         """
         super().__init__()
+
+        if not isinstance(marginal_list, list):
+            marginal_list = [marginal_list]
+
+        self.num_classes_list = []
+        self.I_list = nn.ParameterList([])
+        self.m_list = nn.ParameterList([])
