@@ -3,7 +3,7 @@ import torch
 from collections import defaultdict
 from torch.utils.data import Dataset
 
-__all__ = []
+__all__ = ['LayerDAGNodeCountDataset']
 
 class LayerDAGBaseDataset(Dataset):
     def __init__(self, conditional=False):
@@ -56,3 +56,7 @@ class LayerDAGBaseDataset(Dataset):
         if self.conditional:
             self.input_y = torch.tensor(self.input_y)
             self.input_g = torch.LongTensor(self.input_g)
+
+class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
+    def __init__(self, dag_dataset, conditional=False):
+        super().__init__(conditional)
