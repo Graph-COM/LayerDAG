@@ -303,8 +303,6 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
         if get_marginal:
             # Case 1 (a single node attribute): self.input_x_n is of shape (N).
             # Case 2 (multiple node attributes): self.input_x_n is of shape (N, F).
-            import ipdb
-            ipdb.set_trace()
             input_x_n = self.input_x_n
             if input_x_n.ndim == 1:
                 input_x_n = input_x_n.unsqueeze(-1)
@@ -323,6 +321,7 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
 
                 for c in range(len(x_n_count_f)):
                     x_n_type_f_c = unique_x_n_f[c].item()
+                    # No need to include the dummy category for marginal computation.
                     if x_n_type_f_c != num_x_n_types_f:
                         x_n_marginal_f[x_n_type_f_c] = x_n_count_f[c].item()
 
