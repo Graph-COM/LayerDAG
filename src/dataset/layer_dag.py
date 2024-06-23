@@ -82,3 +82,9 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
             # For recording indices of the edges in self.input_src/self.input_dst
             input_e_start = len(self.input_src)
             input_e_end = len(self.input_src)
+
+            # Use a dummy node for representing the initial empty DAG.
+            self.input_x_n.append(dag_dataset.dummy_category)
+            input_n_end += 1
+            src = src + 1
+            dst = dst + 1
