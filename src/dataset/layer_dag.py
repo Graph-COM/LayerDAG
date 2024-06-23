@@ -332,3 +332,18 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
 
     def __len__(self):
         return len(self.label_start)
+
+    def __getitem__(self, index):
+        input_e_start = self.input_e_start[index]
+        input_e_end = self.input_e_end[index]
+        input_n_start = self.input_n_start[index]
+        input_n_end = self.input_n_end[index]
+        label_start = self.label_start[index]
+        label_end = self.label_end[index]
+
+        # Absolute and relative (with respect to the new layer) layer idx
+        # for potential extra encodings.
+        input_abs_level = self.input_level[input_n_start:input_n_end]
+        input_rel_level = input_abs_level.max() - input_abs_level
+
+        z = self.input_x_n[label_start:label_end]
