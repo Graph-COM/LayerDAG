@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 __all__ = [
@@ -25,3 +26,16 @@ class DiscreteDiffusion(nn.Module):
         self.num_classes_list = []
         self.I_list = nn.ParameterList([])
         self.m_list = nn.ParameterList([])
+
+        for marginal_f in marginal_list:
+            num_classes_f = len(marginal_f)
+            self.num_classes_list.append(num_classes_f)
+            self.I_list.append(nn.Parameter(
+                torch.eye(num_classes_f), requires_grad=False))
+            marginal_f = marginal_f.unsqueeze(0).expand(
+                num_classes_f, -1).clone()
+            self.m_list.append(nn.Parameter(marginal_f, requires_grad=False))
+
+        self.T = T
+        import ipdb
+        ipdb.set_trace()
