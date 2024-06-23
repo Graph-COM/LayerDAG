@@ -49,6 +49,8 @@ def main(args):
         'T': config['node_pred']['T']
     }
     node_diffusion = DiscreteDiffusion(**node_diffusion_config)
+    train_node_pred_dataset.node_diffusion = node_diffusion
+    val_node_pred_dataset.node_diffusion = node_diffusion
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
