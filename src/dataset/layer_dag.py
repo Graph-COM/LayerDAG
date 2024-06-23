@@ -199,3 +199,38 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
         # (node attributes for the next layer)
         self.label_start = []
         self.label_end = []
+
+        for i in range(len(dag_dataset)):
+            data_i = dag_dataset[i]
+
+            if conditional:
+                src, dst, x_n, y = data_i
+                # Index of y in self.input_y
+                input_g = len(self.input_y)
+                self.input_y.append(y)
+            else:
+                src, dst, x_n = data_i
+
+            # For recording indices of the node attributes in self.input_x_n,
+            # which will be model input.
+            input_n_start = len(self.input_x_n)
+            input_n_end = len(self.input_x_n)
+
+            # For recording indices of the edges in self.input_src/self.input_dst,
+            # which will be model input.
+            input_e_start = len(self.input_src)
+            input_e_end = len(self.input_src)
+
+            # Use a dummy node for representing the initial empty DAG, which
+            # will be model input.
+            self.input_x_n.append(dag_dataset.dummy_category)
+            input_n_end += 1
+            src = src + 1
+            dst = dst + 1
+            # For recording indices of the node attributes in self.input_x_n,
+            # which will be ground truth labels for model predictions.
+            label_start = len(self.input_x_n)
+
+            # Layer ID
+            level = 0
+            self.input_level.append(level)
