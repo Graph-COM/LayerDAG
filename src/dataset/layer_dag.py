@@ -347,3 +347,4 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
         input_rel_level = input_abs_level.max() - input_abs_level
 
         z = self.input_x_n[label_start:label_end]
+        raise NotImplementedError
