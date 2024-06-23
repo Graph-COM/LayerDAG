@@ -63,3 +63,14 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
 
         # Size of the next layer to predict.
         self.label = []
+
+        for i in range(len(dag_dataset)):
+            data_i = dag_dataset[i]
+
+            if conditional:
+                src, dst, x_n, y = data_i
+                # Index of y in self.input_y
+                input_g = len(self.input_y)
+                self.input_y.append(y)
+            else:
+                src, dst, x_n = data_i
