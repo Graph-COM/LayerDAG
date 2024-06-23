@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 __all__ = [
     'DiscreteDiffusion',
@@ -15,7 +16,7 @@ class DiscreteDiffusion(nn.Module):
         Parameters
         ----------
         marginal_list : list of torch.Tensor
-            marginal_list[f] is the marginal distribution of the f-th attribute
+            marginal_list[d] is the marginal distribution of the d-th attribute
         s : float
             Constant in noise schedule
         """
@@ -28,14 +29,14 @@ class DiscreteDiffusion(nn.Module):
         self.I_list = nn.ParameterList([])
         self.m_list = nn.ParameterList([])
 
-        for marginal_f in marginal_list:
-            num_classes_f = len(marginal_f)
-            self.num_classes_list.append(num_classes_f)
+        for marginal_d in marginal_list:
+            num_classes_d = len(marginal_d)
+            self.num_classes_list.append(num_classes_d)
             self.I_list.append(nn.Parameter(
-                torch.eye(num_classes_f), requires_grad=False))
-            marginal_f = marginal_f.unsqueeze(0).expand(
-                num_classes_f, -1).clone()
-            self.m_list.append(nn.Parameter(marginal_f, requires_grad=False))
+                torch.eye(num_classes_d), requires_grad=False))
+            marginal_d = marginal_d.unsqueeze(0).expand(
+                num_classes_d, -1).clone()
+            self.m_list.append(nn.Parameter(marginal_d, requires_grad=False))
 
         self.T = T
         # Cosine schedule as proposed in
@@ -59,18 +60,18 @@ class DiscreteDiffusion(nn.Module):
         self.alphas = nn.Parameter(self.alphas, requires_grad=False)
         self.alpha_bars = nn.Parameter(self.alpha_bars, requires_grad=False)
 
-    def get_Q(self, alpha, f):
+    def get_Q(self, alpha, d):
         """
         Parameters
         ----------
-        f : int
+        d : int
             Index for the attribute
         """
-        return alpha * self.I_list[f] + (1 - alpha) * self.m_list[f]
+        return alpha * self.I_list[d] + (1 - alpha) * self.m_list[d]
 
     def apply_noise(self, z, t=None):
         if t is None:
-            # Sample a timestep t uniformly.
+            # Sample a timestep t uniformly from 0 to self.T.
             # Note that the notation is slightly inconsistent with the paper.
             # t=0 corresponds to t=1 in the paper, where corruption has already taken place.
             t = torch.randint(low=0, high=self.T + 1, size=(1,))
@@ -79,6 +80,9 @@ class DiscreteDiffusion(nn.Module):
 
         if z.ndim == 1:
             z = z.unsqueeze(-1)
+
+        import ipdb
+        ipdb.set_trace()
 
         _, D = z.shape
         z_t_list = []
