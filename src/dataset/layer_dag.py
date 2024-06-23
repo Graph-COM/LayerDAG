@@ -194,3 +194,8 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
 class LayerDAGNodePredDataset(LayerDAGBaseDataset):
     def __init__(self, dag_dataset, conditional=False, get_marginal=True):
         super().__init__(conditional)
+
+        # Indices for retrieving the labels
+        # (node attributes for the next layer)
+        self.label_start = []
+        self.label_end = []
