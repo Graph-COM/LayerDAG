@@ -243,3 +243,11 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
             x_n = x_n.tolist()
             out_adj_list = self.get_out_adj_list(src, dst)
             in_adj_list = self.get_in_adj_list(src, dst)
+
+            frontiers = [
+                u for u in range(1, num_nodes) if in_deg[u] == 0
+            ]
+            frontier_size = len(frontiers)
+            while frontier_size > 0:
+                # There is another layer.
+                level += 1
