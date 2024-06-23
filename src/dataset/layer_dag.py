@@ -95,3 +95,14 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
 
             num_nodes = len(x_n) + 1
             in_deg = self.get_in_deg(dst, num_nodes)
+
+            src = src.tolist()
+            dst = dst.tolist()
+            x_n = x_n.tolist()
+            out_adj_list = self.get_out_adj_list(src, dst)
+            in_adj_list = self.get_in_adj_list(src, dst)
+
+            frontiers = [
+                u for u in range(1, num_nodes) if in_deg[u] == 0
+            ]
+            frontier_size = len(frontiers)
