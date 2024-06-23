@@ -299,3 +299,32 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
         self.base_postprocess()
         self.label_start = torch.LongTensor(self.label_start)
         self.label_end = torch.LongTensor(self.label_end)
+
+        if get_marginal:
+            # Case 1 (a single node attribute): self.input_x_n is of shape (N).
+            # Case 2 (multiple node attributes): self.input_x_n is of shape (N, F).
+            input_x_n = self.input_x_n
+            if input_x_n.ndim == 1:
+                input_x_n = input_x_n.unsqueeze(-1)
+
+            num_feats = input_x_n.shape[-1]
+            x_n_marginal = []
+            for f in range(num_feats):
+                input_x_n_f = input_x_n[:, f]
+                unique_x_n_f, x_n_count_f = input_x_n_f.unique(return_counts=True)
+                assert unique_x_n_f.max().item() == len(x_n_count_f) - 1,\
+                    'Need to re-label node types to be consecutive integers starting from 0'
+
+                # The last category is the dummy category.
+                num_x_n_types_f = len(x_n_count_f) - 1
+                x_n_marginal_f = torch.zeros(num_x_n_types_f)
+
+                for c in range(len(x_n_count_f)):
+                    x_n_type_f_c = unique_x_n_f[c].item()
+                    if x_n_type_f_c != num_x_n_types_f:
+                        x_n_marginal_f[x_n_type_f_c] = x_n_count_f[c].item()
+
+                x_n_marginal_f /= (x_n_marginal_f.sum() + 1e-8)
+                x_n_marginal.append(x_n_marginal_f)
+
+            self.x_n_marginal = x_n_marginal
