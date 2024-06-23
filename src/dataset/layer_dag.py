@@ -88,3 +88,10 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
             input_n_end += 1
             src = src + 1
             dst = dst + 1
+
+            # Layer ID
+            level = 0
+            self.input_level.append(level)
+
+            num_nodes = len(x_n) + 1
+            in_deg = self.get_in_deg(dst, num_nodes)
