@@ -266,3 +266,10 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
                     # Record the index for retrieving graph-level conditional
                     # information for model input.
                     self.input_g.append(input_g)
+
+                # Record indices for retrieving node attributes of the new
+                # layer for model predictions.
+                self.label_start.append(label_start)
+                label_end = label_start + frontier_size
+                self.label_end.append(label_end)
+                label_start = label_end
