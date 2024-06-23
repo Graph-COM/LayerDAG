@@ -60,3 +60,6 @@ class LayerDAGBaseDataset(Dataset):
 class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
     def __init__(self, dag_dataset, conditional=False):
         super().__init__(conditional)
+
+        # Size of the next layer to predict.
+        self.label = []
