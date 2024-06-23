@@ -107,6 +107,7 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
             ]
             frontier_size = len(frontiers)
             while frontier_size > 0:
+                # There is another layer.
                 level += 1
 
                 # Record indices for retrieving edges in the previous layers
@@ -118,3 +119,73 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
                 # layers for model input.
                 self.input_n_start.append(input_n_start)
                 self.input_n_end.append(input_n_end)
+
+                if conditional:
+                    # Record the index for retrieving graph-level conditional
+                    # information for model input.
+                    self.input_g.append(input_g)
+                self.label.append(frontier_size)
+
+                # (1) Add the node attributes/edges for the current layer.
+                # (2) Get the next layer.
+                next_frontiers = []
+                for u in frontiers:
+                    # -1 for the initial dummy node
+                    self.input_x_n.append(x_n[u - 1])
+                    self.input_level.append(level)
+
+                    for t in in_adj_list[u]:
+                        self.input_src.append(t)
+                        self.input_dst.append(u)
+                        input_e_end += 1
+
+                    for v in out_adj_list[u]:
+                        in_deg[v] -= 1
+                        if in_deg[v] == 0:
+                            next_frontiers.append(v)
+                input_n_end += frontier_size
+
+                frontiers = next_frontiers
+                frontier_size = len(frontiers)
+
+            # Handle termination, namely predicting the layer size to be 0.
+            self.input_e_start.append(input_e_start)
+            self.input_e_end.append(input_e_end)
+            self.input_n_start.append(input_n_start)
+            self.input_n_end.append(input_n_end)
+            if conditional:
+                self.input_g.append(input_g)
+            self.label.append(frontier_size)
+
+        self.base_postprocess()
+        self.label = torch.LongTensor(self.label)
+        # Maximum number of nodes in a layer.
+        self.max_num_nodes = self.label.max().item()
+
+    def __len__(self):
+        return len(self.label)
+
+    def __getitem__(self, index):
+        input_e_start = self.input_e_start[index]
+        input_e_end = self.input_e_end[index]
+        input_n_start = self.input_n_start[index]
+        input_n_end = self.input_n_end[index]
+
+        # Absolute and relative (with respect to the new layer) layer idx
+        # for potential extra encodings.
+        input_abs_level = self.input_level[input_n_start:input_n_end]
+        input_rel_level = input_abs_level.max() - input_abs_level
+
+        if self.conditional:
+            input_g = self.input_g[index]
+            input_y = self.input_y[input_g].item()
+
+            return self.input_src[input_e_start:input_e_end],\
+                self.input_dst[input_e_start:input_e_end],\
+                self.input_x_n[input_n_start:input_n_end],\
+                input_abs_level, input_rel_level, input_y, self.label[index]
+        else:
+            return self.input_src[input_e_start:input_e_end],\
+                self.input_dst[input_e_start:input_e_end],\
+                self.input_x_n[input_n_start:input_n_end],\
+                input_abs_level, input_rel_level, self.label[index]
