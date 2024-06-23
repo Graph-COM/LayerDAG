@@ -273,3 +273,29 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
                 label_end = label_start + frontier_size
                 self.label_end.append(label_end)
                 label_start = label_end
+
+                # (1) Add the node attributes/edges for the current layer.
+                # (2) Get the next layer.
+                next_frontiers = []
+                for u in frontiers:
+                    # -1 for the initial dummy node
+                    self.input_x_n.append(x_n[u - 1])
+                    self.input_level.append(level)
+
+                    for t in in_adj_list[u]:
+                        self.input_src.append(t)
+                        self.input_dst.append(u)
+                        input_e_end += 1
+
+                    for v in out_adj_list[u]:
+                        in_deg[v] -= 1
+                        if in_deg[v] == 0:
+                            next_frontiers.append(v)
+                input_n_end += frontier_size
+
+                frontiers = next_frontiers
+                frontier_size = len(frontiers)
+
+        self.base_postprocess()
+        self.label_start = torch.LongTensor(self.label_start)
+        self.label_end = torch.LongTensor(self.label_end)
