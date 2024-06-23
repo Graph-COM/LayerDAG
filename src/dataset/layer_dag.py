@@ -329,3 +329,6 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
                 x_n_marginal.append(x_n_marginal_f)
 
             self.x_n_marginal = x_n_marginal
+
+    def __len__(self):
+        return len(self.label_start)
