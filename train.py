@@ -42,6 +42,11 @@ def main(args):
     train_node_pred_dataset = LayerDAGNodePredDataset(train_set, config['general']['conditional'])
     val_node_pred_dataset = LayerDAGNodePredDataset(
         val_set, config['general']['conditional'], get_marginal=False)
+    
+    node_diffusion_config = {
+        'marginal_list': train_node_pred_dataset.x_n_marginal,
+        'T': config['node_pred']['T']
+    }
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
