@@ -58,3 +58,6 @@ class DiscreteDiffusion(nn.Module):
         self.betas = nn.Parameter(self.betas, requires_grad=False)
         self.alphas = nn.Parameter(self.alphas, requires_grad=False)
         self.alpha_bars = nn.Parameter(self.alpha_bars, requires_grad=False)
+
+    def get_Q(self, alpha, f):
+        return alpha * self.I_list[f] + (1 - alpha) * self.m_list[f]
