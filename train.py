@@ -10,7 +10,8 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from setup_utils import set_seed, load_yaml
-from src.dataset import load_dataset, LayerDAGNodeCountDataset
+from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
+    LayerDAGNodePredDataset
 
 def main(args):
     torch.set_num_threads(args.num_threads)
@@ -37,6 +38,10 @@ def main(args):
 
     train_node_count_dataset = LayerDAGNodeCountDataset(train_set, config['general']['conditional'])
     val_node_count_dataset = LayerDAGNodeCountDataset(val_set, config['general']['conditional'])
+
+    train_node_pred_dataset = LayerDAGNodePredDataset(train_set, config['general']['conditional'])
+    val_node_pred_dataset = LayerDAGNodePredDataset(
+        val_set, config['general']['conditional'], get_marginal=False)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

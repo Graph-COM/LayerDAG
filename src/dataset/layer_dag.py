@@ -303,6 +303,8 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
         if get_marginal:
             # Case 1 (a single node attribute): self.input_x_n is of shape (N).
             # Case 2 (multiple node attributes): self.input_x_n is of shape (N, F).
+            import ipdb
+            ipdb.set_trace()
             input_x_n = self.input_x_n
             if input_x_n.ndim == 1:
                 input_x_n = input_x_n.unsqueeze(-1)
