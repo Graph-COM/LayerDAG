@@ -74,3 +74,11 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
                 self.input_y.append(y)
             else:
                 src, dst, x_n = data_i
+
+            # For recording indices of the node attributes in self.input_x_n
+            input_n_start = len(self.input_x_n)
+            input_n_end = len(self.input_x_n)
+
+            # For recording indices of the edges in self.input_src/self.input_dst
+            input_e_start = len(self.input_src)
+            input_e_end = len(self.input_src)
