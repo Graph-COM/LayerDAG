@@ -251,3 +251,18 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
             while frontier_size > 0:
                 # There is another layer.
                 level += 1
+
+                # Record indices for retrieving edges in the previous layers
+                # for model input.
+                self.input_e_start.append(input_e_start)
+                self.input_e_end.append(input_e_end)
+
+                # Record indices for retrieving node attributes in the previous
+                # layers for model input.
+                self.input_n_start.append(input_n_start)
+                self.input_n_end.append(input_n_end)
+
+                if conditional:
+                    # Record the index for retrieving graph-level conditional
+                    # information for model input.
+                    self.input_g.append(input_g)
