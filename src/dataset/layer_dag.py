@@ -106,3 +106,15 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
                 u for u in range(1, num_nodes) if in_deg[u] == 0
             ]
             frontier_size = len(frontiers)
+            while frontier_size > 0:
+                level += 1
+
+                # Record indices for retrieving edges in the previous layers
+                # for model input.
+                self.input_e_start.append(input_e_start)
+                self.input_e_end.append(input_e_end)
+
+                # Record indices for retrieving node attributes in the previous
+                # layers for model input.
+                self.input_n_start.append(input_n_start)
+                self.input_n_end.append(input_n_end)
