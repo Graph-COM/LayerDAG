@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from setup_utils import set_seed, load_yaml
-from src.dataset import load_dataset
+from src.dataset import load_dataset, LayerDAGNodeCountDataset
 
 def main(args):
     torch.set_num_threads(args.num_threads)
@@ -34,6 +34,9 @@ def main(args):
 
     # For training the generative model, no need to use the test set.
     train_set, val_set, _ = load_dataset(dataset)
+
+    train_node_count_dataset = LayerDAGNodeCountDataset(train_set, config['general']['conditional'])
+    val_node_count_dataset = LayerDAGNodeCountDataset(val_set, config['general']['conditional'])
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
