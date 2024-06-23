@@ -3,7 +3,8 @@ import torch
 from collections import defaultdict
 from torch.utils.data import Dataset
 
-__all__ = ['LayerDAGNodeCountDataset']
+__all__ = ['LayerDAGNodeCountDataset',
+           'LayerDAGNodePredDataset']
 
 class LayerDAGBaseDataset(Dataset):
     def __init__(self, conditional=False):
@@ -189,3 +190,7 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
                 self.input_dst[input_e_start:input_e_end],\
                 self.input_x_n[input_n_start:input_n_end],\
                 input_abs_level, input_rel_level, self.label[index]
+
+class LayerDAGNodePredDataset(LayerDAGBaseDataset):
+    def __init__(self, dag_dataset, conditional=False, get_marginal=True):
+        super().__init__(conditional)
