@@ -369,3 +369,58 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
 class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
     def __init__(self, dag_dataset, conditional=False):
         super().__init__(conditional)
+
+        self.query_src = []
+        self.query_dst = []
+        # Indices for retrieving the query node pairs
+        self.query_start = []
+        self.query_end = []
+        self.label = []
+
+        num_edges = 0
+        num_nonsrc_nodes = 0
+        for i in range(len(dag_dataset)):
+            data_i = dag_dataset[i]
+
+            if conditional:
+                src, dst, x_n, y = data_i
+                # Index of y in self.input_y
+                input_g = len(self.input_y)
+                self.input_y.append(y)
+            else:
+                src, dst, x_n = data_i
+
+            # For recording indices of the node attributes in self.input_x_n,
+            # which will be model input.
+            input_n_start = len(self.input_x_n)
+            input_n_end = len(self.input_x_n)
+
+            # For recording indices of the edges in self.input_src/self.input_dst,
+            # which will be model input.
+            input_e_start = len(self.input_src)
+            input_e_end = len(self.input_src)
+
+            # For recording indices of the query node pairs in
+            # self.query_src/self.query_dst for model predictions.
+            query_start = len(self.query_src)
+            query_end = len(self.query_src)
+
+            # Use a dummy node for representing the initial empty DAG, which
+            # will be model input.
+            self.input_x_n.append(dag_dataset.dummy_category)
+            input_n_end += 1
+            src = src + 1
+            dst = dst + 1
+
+            # Layer ID
+            level = 0
+            self.input_level.append(level)
+
+            num_nodes = len(x_n) + 1
+            in_deg = self.get_in_deg(dst, num_nodes)
+
+            src = src.tolist()
+            dst = dst.tolist()
+            x_n = x_n.tolist()
+            out_adj_list = self.get_out_adj_list(src, dst)
+            in_adj_list = self.get_in_adj_list(src, dst)
