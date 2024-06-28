@@ -347,4 +347,20 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
         input_rel_level = input_abs_level.max() - input_abs_level
 
         z = self.input_x_n[label_start:label_end]
-        raise NotImplementedError
+        t, z_t = self.node_diffusion.apply_noise(z)
+        import ipdb
+        ipdb.set_trace()
+
+        if self.conditional:
+            input_g = self.input_g[index]
+            input_y = self.input_y[input_g].item()
+
+            return self.input_src[input_e_start:input_e_end],\
+                self.input_dst[input_e_start:input_e_end],\
+                self.input_x_n[input_n_start:input_n_end],\
+                input_abs_level, input_rel_level, z_t, t, input_y, z
+        else:
+            return self.input_src[input_e_start:input_e_end],\
+                self.input_dst[input_e_start:input_e_end],\
+                self.input_x_n[input_n_start:input_n_end],\
+                input_abs_level, input_rel_level, z_t, t, z

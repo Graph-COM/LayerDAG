@@ -52,6 +52,9 @@ def main(args):
     train_node_pred_dataset.node_diffusion = node_diffusion
     val_node_pred_dataset.node_diffusion = node_diffusion
 
+    # train_edge_pred_dataset = LayerDAGEdgePredDataset(train_set, config['general']['conditional'])
+    # val_edge_pred_dataset = LayerDAGEdgePredDataset(val_set, config['general']['conditional'])
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
