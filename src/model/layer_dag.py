@@ -288,6 +288,77 @@ class TransformerLayer(nn.Module):
 
         return h_n
 
+class NodePredModel(nn.Module):
+    def __init__(self,
+                 graph_encoder,
+                 num_x_n_cat,
+                 x_n_emb_size,
+                 t_emb_size,
+                 in_hidden_size,
+                 out_hidden_size,
+                 num_transformer_layers,
+                 num_heads,
+                 dropout):
+        super().__init__()
+
+        self.graph_encoder = graph_encoder
+        num_real_classes = num_x_n_cat - 1
+        self.x_n_emb = MultiEmbedding(num_real_classes, x_n_emb_size)
+        self.t_emb = SinusoidalPE(t_emb_size)
+        in_hidden_size = in_hidden_size + t_emb_size + len(num_real_classes) * x_n_emb_size
+        self.project_h_n = nn.Sequential(
+            nn.Linear(in_hidden_size, out_hidden_size),
+            nn.GELU()
+        )
+
+        self.trans_layers = nn.ModuleList()
+        for _ in range(num_transformer_layers):
+            self.trans_layers.append(TransformerLayer(
+                out_hidden_size, num_heads, dropout
+            ))
+
+        self.pred_list = nn.ModuleList([])
+        num_real_classes = num_real_classes.tolist()
+        for num_classes_f in num_real_classes:
+            self.pred_list.append(nn.Sequential(
+                nn.Linear(out_hidden_size, out_hidden_size),
+                nn.GELU(),
+                nn.Linear(out_hidden_size, num_classes_f)
+            ))
+
+    def forward_with_h_g(self, h_g, x_n_t,
+                         t, query2g, num_query_cumsum):
+        h_t = self.t_emb(t)
+        h_g = torch.cat([h_g, h_t], dim=1)
+
+        h_n_t = self.x_n_emb(x_n_t)
+        h_n_t = torch.cat([h_n_t, h_g[query2g]], dim=1)
+        h_n_t = self.project_h_n(h_n_t)
+
+        for trans_layer in self.trans_layers:
+            h_n_t = trans_layer(h_n_t, num_query_cumsum)
+
+        pred = []
+        for d in range(len(self.pred_list)):
+            pred.append(self.pred_list[d](h_n_t))
+
+        return pred
+
+    def forward(self, A, x_n, abs_level, rel_level, A_n2g, x_n_t,
+                t, query2g, num_query_cumsum, y=None):
+        """
+        Parameters
+        ----------
+        x_n_t : torch.LongTensor of shape (Q)
+        t : torch.LongTensor of shape (B, 1)
+        query2g : torch.LongTensor of shape (Q)
+        num_query_cumsum : torch.LongTensor of shape (B + 1)
+        """
+        h_g = self.graph_encoder(A, x_n, abs_level,
+                                 rel_level, y=y, A_n2g=A_n2g)
+        return self.forward_with_h_g(h_g, x_n_t, t, query2g,
+                                     num_query_cumsum)
+
 class LayerDAG(nn.Module):
     def __init__(self,
                  device,
