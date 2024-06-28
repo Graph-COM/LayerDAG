@@ -59,8 +59,9 @@ def main(args):
         'avg_in_deg': train_edge_pred_dataset.avg_in_deg,
         'T': config['edge_pred']['T']
     }
-    import ipdb
-    ipdb.set_trace()
+    edge_diffusion = EdgeDiscreteDiffusion(**edge_diffusion_config)
+    train_edge_pred_dataset.edge_diffusion = edge_diffusion
+    val_edge_pred_dataset.edge_diffusion = edge_diffusion
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
