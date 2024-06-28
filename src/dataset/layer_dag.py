@@ -499,3 +499,15 @@ class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
                 current_frontiers = next_frontiers
                 input_e_end += temp_edge_count
                 query_start = query_end
+
+        self.base_postprocess()
+        self.query_src = torch.LongTensor(self.query_src)
+        self.query_dst = torch.LongTensor(self.query_dst)
+        self.query_start = torch.LongTensor(self.query_start)
+        self.query_end = torch.LongTensor(self.query_end)
+        self.label = torch.LongTensor(self.label)
+
+        self.avg_in_deg = num_edges / num_nonsrc_nodes
+
+    def __len__(self):
+        return len(self.query_start)
