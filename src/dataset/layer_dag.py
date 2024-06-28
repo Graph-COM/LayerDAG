@@ -162,7 +162,7 @@ class LayerDAGNodeCountDataset(LayerDAGBaseDataset):
         self.base_postprocess()
         self.label = torch.LongTensor(self.label)
         # Maximum number of nodes in a layer.
-        self.max_num_nodes = self.label.max().item()
+        self.max_layer_size = self.label.max().item()
 
     def __len__(self):
         return len(self.label)

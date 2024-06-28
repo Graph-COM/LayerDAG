@@ -63,6 +63,18 @@ def main(args):
     train_edge_pred_dataset.edge_diffusion = edge_diffusion
     val_edge_pred_dataset.edge_diffusion = edge_diffusion
 
+    model_config = {
+        'num_x_n_cat': train_set.num_categories,
+        'node_count_encoder_config': config['node_count']['model'],
+        'max_layer_size': train_node_count_dataset.max_layer_size,
+        'node_pred_graph_encoder_config': config['node_pred']['graph_encoder'],
+        'node_predictor_config': config['node_pred']['predictor'],
+        'edge_pred_graph_encoder_config': config['edge_pred']['graph_encoder'],
+        'edge_predictor_config': config['edge_pred']['predictor'],
+        'max_level': max(train_node_pred_dataset.input_level.max().item(),
+                         val_node_pred_dataset.input_level.max().item())
+    }
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
