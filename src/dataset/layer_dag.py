@@ -511,3 +511,31 @@ class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
 
     def __len__(self):
         return len(self.query_start)
+
+    def __getitem__(self, index):
+        input_e_start = self.input_e_start[index]
+        input_e_end = self.input_e_end[index]
+        input_src = self.input_src[input_e_start:input_e_end]
+        input_dst = self.input_dst[input_e_start:input_e_end]
+
+        input_n_start = self.input_n_start[index]
+        input_n_end = self.input_n_end[index]
+        input_x_n = self.input_x_n[input_n_start:input_n_end]
+
+        # Absolute and relative (with respect to the new layer) layer idx
+        # for potential extra encodings.
+        input_abs_level = self.input_level[input_n_start:input_n_end]
+        input_rel_level = input_abs_level.max() - input_abs_level
+
+        query_start = self.query_start[index]
+        query_end = self.query_end[index]
+        query_src = self.query_src[query_start:query_end]
+        query_dst = self.query_dst[query_start:query_end]
+        label = self.label[query_start:query_end]
+
+        unique_src = torch.unique(query_src, sorted=False)
+        unique_dst = torch.unique(query_dst, sorted=False)
+        label_adj = label.reshape(len(unique_dst), len(unique_src))
+
+        import ipdb
+        ipdb.set_trace()
