@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from einops import rearrange
+
 __all__ = [
     'LayerDAG'
 ]
@@ -169,6 +171,123 @@ class GraphClassifier(nn.Module):
         pred_g = self.predictor(h_g)
 
         return pred_g
+
+class TransformerLayer(nn.Module):
+    def __init__(self,
+                 hidden_size,
+                 num_heads,
+                 dropout):
+        super().__init__()
+
+        self.to_v = nn.Linear(hidden_size, hidden_size)
+        self.to_qk = nn.Linear(hidden_size, hidden_size * 2)
+
+        self._reset_parameters()
+
+        self.num_heads = num_heads
+        head_dim = hidden_size // num_heads
+        assert head_dim * num_heads == hidden_size, "hidden_size must be divisible by num_heads"
+        self.scale = head_dim ** -0.5
+
+        self.proj_new = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.Dropout(dropout)
+        )
+        self.norm1 = nn.LayerNorm(hidden_size)
+
+        self.out_proj = nn.Sequential(
+            nn.Linear(hidden_size, 4 * hidden_size),
+            nn.GELU(),
+            nn.Linear(4 * hidden_size, hidden_size),
+            nn.Dropout(dropout)
+        )
+        self.norm2 = nn.LayerNorm(hidden_size)
+
+    def _reset_parameters(self):
+        nn.init.xavier_uniform_(self.to_v.weight)
+        nn.init.xavier_uniform_(self.to_qk.weight)
+
+    def attn(self, q, k, v, num_query_cumsum):
+        """
+        Parameters
+        ----------
+        q : torch.Tensor of shape (N, F)
+            Query matrix for node representations.
+        k : torch.Tensor of shape (N, F)
+            Key matrix for node representations.
+        v : torch.Tensor of shape (N, F)
+            Value matrix for node representations.
+        num_query_cumsum : torch.Tensor of shape (B + 1)
+            num_query_cumsum[0] is 0, num_query_cumsum[i] is the number of queries
+            for the first i graphs in the batch for i > 0.
+
+        Returns
+        -------
+        torch.Tensor of shape (N, F)
+            Updated hidden representations of query nodes for the batch of graphs.
+        """
+        # Handle different numbers of query nodes in the batch with padding.
+        batch_size = len(num_query_cumsum) - 1
+        num_query_nodes = torch.diff(num_query_cumsum)
+        max_num_nodes = num_query_nodes.max().item()
+
+        q_padded = q.new_zeros(batch_size, max_num_nodes, q.shape[-1])
+        k_padded = k.new_zeros(batch_size, max_num_nodes, k.shape[-1])
+        v_padded = v.new_zeros(batch_size, max_num_nodes, v.shape[-1])
+        pad_mask = q.new_zeros(batch_size, max_num_nodes).bool()
+
+        for i in range(batch_size):
+            q_padded[i, :num_query_nodes[i]] = q[num_query_cumsum[i]:num_query_cumsum[i + 1]]
+            k_padded[i, :num_query_nodes[i]] = k[num_query_cumsum[i]:num_query_cumsum[i + 1]]
+            v_padded[i, :num_query_nodes[i]] = v[num_query_cumsum[i]:num_query_cumsum[i + 1]]
+            pad_mask[i, num_query_nodes[i]:] = True
+
+        # Split F into H * D, where H is the number of heads
+        # D is the dimension per head.
+
+        # (B, H, max_num_nodes, D)
+        q_padded = rearrange(q_padded, 'b n (h d) -> b h n d', h=self.num_heads)
+        # (B, H, max_num_nodes, D)
+        k_padded = rearrange(k_padded, 'b n (h d) -> b h n d', h=self.num_heads)
+        # (B, H, max_num_nodes, D)
+        v_padded = rearrange(v_padded, 'b n (h d) -> b h n d', h=self.num_heads)
+
+        # Q * K^T / sqrt(D)
+        # (B, H, max_num_nodes, max_num_nodes)
+        dot = torch.matmul(q_padded, k_padded.transpose(-1, -2)) * self.scale
+        # Mask unnormalized attention logits for non-existent nodes.
+        # TODO: Revisit for directed graphs.
+        dot = dot.masked_fill(
+            pad_mask.unsqueeze(1).unsqueeze(2),
+            float('-inf'),
+        )
+
+        attn_scores = F.softmax(dot, dim=-1)
+        # (B, H, max_num_nodes, D)
+        h_n_padded = torch.matmul(attn_scores, v_padded)
+        # (B * max_num_nodes, H * D) = (B * max_num_nodes, F)
+        h_n_padded = rearrange(h_n_padded, 'b h n d -> (b n) (h d)')
+
+        # Unpad the aggregation results.
+        # (N, F)
+        pad_mask = (~pad_mask).reshape(-1)
+        return h_n_padded[pad_mask]
+
+    def forward(self, h_n, num_query_cumsum):
+        # Compute value matrix
+        v_n = self.to_v(h_n)
+
+        # Compute query and key matrices
+        q_n, k_n = self.to_qk(h_n).chunk(2, dim=-1)
+
+        h_n_new = self.attn(q_n, k_n, v_n, num_query_cumsum)
+        h_n_new = self.proj_new(h_n_new)
+
+        # Add & Norm
+        h_n = self.norm1(h_n + h_n_new)
+        h_n = self.norm2(h_n + self.out_proj(h_n))
+
+        return h_n
 
 class LayerDAG(nn.Module):
     def __init__(self,
