@@ -433,3 +433,21 @@ class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
 
             num_edges += len(src)
             num_nonsrc_nodes += len(x_n) - len(prev_frontiers)
+
+            for u in prev_frontiers:
+                self.input_x_n.append(x_n[u - 1])
+                self.input_level.append(level)
+
+                for v in out_adj_list[u]:
+                    in_deg[v] -= 1
+                    if in_deg[v] == 0:
+                        current_frontiers.append(v)
+            input_n_end += len(prev_frontiers)
+
+            src_candidates = prev_frontiers
+
+            while len(current_frontiers) > 0:
+                level += 1
+
+                next_frontiers = []
+                temp_edge_count = 0
