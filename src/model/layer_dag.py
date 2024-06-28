@@ -42,6 +42,19 @@ class BiMPNNLayer(nn.Module):
                 self.W_self(h_n)
         return F.gelu(h_n_out)
 
+class OneHotPE(nn.Module):
+    def __init__(self, pe_size):
+        super().__init__()
+
+        self.pe_size = pe_size
+
+    def forward(self, position):
+        if self.pe_size == 0:
+            return torch.zeros(len(position), 0).to(position.device)
+
+        return F.one_hot(position.clamp(max=self.pe_size - 1).long().squeeze(-1),
+                         num_classes=self.pe_size)
+
 class LayerDAG(nn.Module):
     def __init__(self,
                  device,
