@@ -407,3 +407,10 @@ class LayerDAG(nn.Module):
                                              node_pred_graph_encoder_config['x_n_emb_size'],
                                              in_hidden_size=hidden_size,
                                              **node_predictor_config).to(device)
+
+        self.edge_diffusion = edge_diffusion
+        hidden_size = len(num_x_n_cat) * edge_pred_graph_encoder_config['x_n_emb_size'] +\
+            edge_pred_graph_encoder_config['pe_emb_size'] +\
+            edge_pred_graph_encoder_config['y_emb_size']
+        edge_pred_graph_encoder = BiMPNNEncoder(num_x_n_cat, hidden_size=hidden_size,
+                                                **edge_pred_graph_encoder_config).to(device)
