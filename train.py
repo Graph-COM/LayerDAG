@@ -14,6 +14,50 @@ from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
     LayerDAGNodePredDataset, LayerDAGEdgePredDataset, collate_node_count
 from src.model import DiscreteDiffusion, EdgeDiscreteDiffusion, LayerDAG
 
+@torch.no_grad()
+def eval_node_count(device, val_loader, model):
+    model.eval()
+    total_nll = 0
+    total_count = 0
+    true_count = 0
+    for batch_data in tqdm(val_loader):
+        if len(batch_data) == 8:
+            batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+                batch_rel_level, batch_y, batch_n2g_index, batch_label = batch_data
+            batch_y = batch_y.to(device)
+        else:
+            batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+                batch_rel_level, batch_n2g_index, batch_label = batch_data
+            batch_y = None
+
+        num_nodes = len(batch_x_n)
+        batch_A = dglsp.spmatrix(
+            batch_edge_index, shape=(num_nodes, num_nodes)).to(device)
+        batch_x_n = batch_x_n.to(device)
+        batch_abs_level = batch_abs_level.to(device)
+        batch_rel_level = batch_rel_level.to(device)
+        batch_A_n2g = dglsp.spmatrix(
+            batch_n2g_index, shape=(batch_size, num_nodes)).to(device)
+        batch_label = batch_label.to(device)
+
+        batch_logits = model(batch_A, batch_x_n, batch_abs_level,
+                             batch_rel_level, batch_A_n2g, batch_y)
+
+        batch_nll = -batch_logits.log_softmax(dim=-1)
+        # In case the max layer size in the validation set is larger than
+        # that in the training set.
+        batch_label = batch_label.clamp(max=batch_nll.shape[-1] - 1)
+        batch_nll = batch_nll[torch.arange(batch_size).to(device), batch_label]
+        total_nll += batch_nll.sum().item()
+
+        batch_probs = batch_logits.softmax(dim=-1)
+        batch_preds = batch_probs.multinomial(1).squeeze(-1)
+        true_count += (batch_preds == batch_label).sum().item()
+
+        total_count += batch_size
+
+    return total_nll / total_count, true_count / total_count
+
 def main_node_count(device, train_set, val_set, model, config, patience):
     train_loader = DataLoader(train_set,
                               shuffle=True,
@@ -60,6 +104,27 @@ def main_node_count(device, train_set, val_set, model, config, patience):
             optimizer.step()
 
             wandb.log({'node_count/loss': loss.item()})
+
+        val_nll, val_acc = eval_node_count(device, val_loader, model)
+        if val_nll < best_val_nll:
+            best_val_nll = val_nll
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            best_state_dict = deepcopy(model.state_dict())
+            num_patient_epochs = 0
+        else:
+            num_patient_epochs += 1
+        wandb.log({'node_count/epoch': epoch,
+                   'node_count/val_nll': val_nll,
+                   'node_count/best_val_nll': best_val_nll,
+                   'node_count/val_acc': val_acc,
+                   'node_count/best_val_acc': best_val_acc,
+                   'node_count/num_patient_epochs': num_patient_epochs})
+
+        if (patience is not None) and (num_patient_epochs == patience):
+            break
+
+    return best_state_dict
 
 def main(args):
     torch.set_num_threads(args.num_threads)
