@@ -15,7 +15,24 @@ from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
 from src.model import DiscreteDiffusion, EdgeDiscreteDiffusion, LayerDAG
 
 def main_node_count(device, train_set, val_set, model, config, patience):
-    pass
+    train_loader = DataLoader(train_set,
+                              shuffle=True,
+                              collate_fn=collate_node_count,
+                              **config['loader'],
+                              drop_last=True)
+    val_loader = DataLoader(val_set,
+                            shuffle=False,
+                            collate_fn=collate_node_count,
+                            **config['loader'])
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), **config['optimizer'])
+
+    best_val_nll = float('inf')
+    best_val_acc = 0
+    best_state_dict = deepcopy(model.state_dict())
+    num_patient_epochs = 0
+    for epoch in range(config['num_epochs']):
+        model.train()
 
 def main(args):
     torch.set_num_threads(args.num_threads)
