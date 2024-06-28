@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from setup_utils import set_seed, load_yaml
 from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
-    LayerDAGNodePredDataset
+    LayerDAGNodePredDataset, LayerDAGEdgePredDataset
 from src.model import DiscreteDiffusion
 
 def main(args):
@@ -52,8 +52,8 @@ def main(args):
     train_node_pred_dataset.node_diffusion = node_diffusion
     val_node_pred_dataset.node_diffusion = node_diffusion
 
-    # train_edge_pred_dataset = LayerDAGEdgePredDataset(train_set, config['general']['conditional'])
-    # val_edge_pred_dataset = LayerDAGEdgePredDataset(val_set, config['general']['conditional'])
+    train_edge_pred_dataset = LayerDAGEdgePredDataset(train_set, config['general']['conditional'])
+    val_edge_pred_dataset = LayerDAGEdgePredDataset(val_set, config['general']['conditional'])
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
