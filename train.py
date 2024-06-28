@@ -126,6 +126,9 @@ def main_node_count(device, train_set, val_set, model, config, patience):
 
     return best_state_dict
 
+def main_node_pred(device, train_set, val_set, model, config, patience):
+    pass
+
 def main(args):
     torch.set_num_threads(args.num_threads)
 
@@ -195,6 +198,11 @@ def main(args):
         device, train_node_count_dataset, val_node_count_dataset,
         model.node_count_model, config['node_count'], config['general']['patience'])
     model.node_count_model.load_state_dict(node_count_state_dict)
+
+    node_pred_state_dict = main_node_pred(
+        device, train_node_pred_dataset, val_node_pred_dataset,
+        model.node_pred_model, config['node_pred'], config['general']['patience'])
+    model.node_pred_model.load_state_dict(node_pred_state_dict)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
