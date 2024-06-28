@@ -202,3 +202,9 @@ class LayerDAG(nn.Module):
         node_count_encoder = BiMPNNEncoder(num_x_n_cat,
                                            hidden_size=hidden_size,
                                            **node_count_encoder_config).to(device)
+        self.node_count_model = GraphClassifier(
+            node_count_encoder,
+            emb_size=hidden_size,
+            num_classes=max_layer_size+1).to(device)
+        import ipdb
+        ipdb.set_trace()
