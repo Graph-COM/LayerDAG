@@ -1,6 +1,7 @@
 import math
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 __all__ = [
     'LayerDAG'
@@ -24,6 +25,22 @@ class SinusoidalPE(nn.Module):
             torch.sin(position * self.div_term),
             torch.cos(position * self.div_term)
         ], dim=-1)
+
+class BiMPNNLayer(nn.Module):
+    def __init__(self, in_size, out_size):
+        super().__init__()
+
+        self.W = nn.Linear(in_size, out_size)
+        self.W_trans = nn.Linear(in_size, out_size)
+        self.W_self = nn.Linear(in_size, out_size)
+
+    def forward(self, A, A_T, h_n):
+        if A.nnz == 0:
+            h_n_out = self.W_self(h_n)
+        else:
+            h_n_out = A @ self.W(h_n) + A_T @ self.W_trans(h_n) +\
+                self.W_self(h_n)
+        return F.gelu(h_n_out)
 
 class LayerDAG(nn.Module):
     def __init__(self,
