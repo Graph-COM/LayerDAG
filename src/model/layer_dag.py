@@ -359,6 +359,37 @@ class NodePredModel(nn.Module):
         return self.forward_with_h_g(h_g, x_n_t, t, query2g,
                                      num_query_cumsum)
 
+class EdgePredModel(nn.Module):
+    def __init__(self,
+                 graph_encoder,
+                 t_emb_size,
+                 in_hidden_size,
+                 out_hidden_size):
+        super().__init__()
+
+        self.graph_encoder = graph_encoder
+        self.t_emb = SinusoidalPE(t_emb_size)
+        self.pred = nn.Sequential(
+            nn.Linear(2 * in_hidden_size + t_emb_size, out_hidden_size),
+            nn.GELU(),
+            nn.Linear(out_hidden_size, 2)
+        )
+
+    def forward(self, A, x_n, abs_level, rel_level, t,
+                query_src, query_dst, y=None):
+        """
+        t : torch.tensor of shape (num_queries, 1)
+        """
+        h_n = self.graph_encoder(A, x_n, abs_level, rel_level, y=y)
+
+        h_e = torch.cat([
+            self.t_emb(t),
+            h_n[query_src],
+            h_n[query_dst]
+        ], dim=-1)
+
+        return self.pred(h_e)
+
 class LayerDAG(nn.Module):
     def __init__(self,
                  device,
@@ -414,3 +445,8 @@ class LayerDAG(nn.Module):
             edge_pred_graph_encoder_config['y_emb_size']
         edge_pred_graph_encoder = BiMPNNEncoder(num_x_n_cat, hidden_size=hidden_size,
                                                 **edge_pred_graph_encoder_config).to(device)
+        self.edge_pred_model = EdgePredModel(edge_pred_graph_encoder,
+                                             in_hidden_size=hidden_size,
+                                             **edge_predictor_config).to(device)
+
+        self.max_level = max_level
