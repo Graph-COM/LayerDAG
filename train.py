@@ -74,7 +74,10 @@ def main(args):
         'max_level': max(train_node_pred_dataset.input_level.max().item(),
                          val_node_pred_dataset.input_level.max().item())
     }
-    model = LayerDAG(device=device)
+    model = LayerDAG(device=device,
+                     node_diffusion=node_diffusion,
+                     edge_diffusion=edge_diffusion,
+                     **model_config)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
