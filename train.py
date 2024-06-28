@@ -12,7 +12,7 @@ from tqdm import tqdm
 from setup_utils import set_seed, load_yaml
 from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
     LayerDAGNodePredDataset, LayerDAGEdgePredDataset
-from src.model import DiscreteDiffusion, EdgeDiscreteDiffusion
+from src.model import DiscreteDiffusion, EdgeDiscreteDiffusion, LayerDAG
 
 def main(args):
     torch.set_num_threads(args.num_threads)
@@ -74,6 +74,7 @@ def main(args):
         'max_level': max(train_node_pred_dataset.input_level.max().item(),
                          val_node_pred_dataset.input_level.max().item())
     }
+    model = LayerDAG()
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
