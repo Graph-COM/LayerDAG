@@ -12,7 +12,7 @@ from tqdm import tqdm
 from setup_utils import set_seed, load_yaml
 from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
     LayerDAGNodePredDataset, LayerDAGEdgePredDataset
-from src.model import DiscreteDiffusion
+from src.model import DiscreteDiffusion, EdgeDiscreteDiffusion
 
 def main(args):
     torch.set_num_threads(args.num_threads)
@@ -54,6 +54,13 @@ def main(args):
 
     train_edge_pred_dataset = LayerDAGEdgePredDataset(train_set, config['general']['conditional'])
     val_edge_pred_dataset = LayerDAGEdgePredDataset(val_set, config['general']['conditional'])
+
+    edge_diffusion_config = {
+        'avg_in_deg': train_edge_pred_dataset.avg_in_deg,
+        'T': config['edge_pred']['T']
+    }
+    import ipdb
+    ipdb.set_trace()
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
