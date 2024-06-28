@@ -55,6 +55,25 @@ class OneHotPE(nn.Module):
         return F.one_hot(position.clamp(max=self.pe_size - 1).long().squeeze(-1),
                          num_classes=self.pe_size)
 
+class MultiEmbedding(nn.Module):
+    def __init__(self, num_x_n_cat, hidden_size):
+        super().__init__()
+
+        self.emb_list = nn.ModuleList([
+            nn.Embedding(num_x_n_cat_i, hidden_size)
+            for num_x_n_cat_i in num_x_n_cat.tolist()
+        ])
+
+    def forward(self, x_n_cat):
+        if len(x_n_cat.shape) == 1:
+            x_n_emb = self.emb_list[0](x_n_cat)
+        else:
+            x_n_emb = torch.cat([
+                self.emb_list[i](x_n_cat[:, i]) for i in range(len(self.emb_list))
+            ], dim=1)
+
+        return x_n_emb
+
 class LayerDAG(nn.Module):
     def __init__(self,
                  device,
