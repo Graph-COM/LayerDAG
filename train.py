@@ -79,6 +79,11 @@ def main(args):
                      edge_diffusion=edge_diffusion,
                      **model_config)
 
+    node_count_state_dict = main_node_count(
+        device, train_node_count_dataset, val_node_count_dataset,
+        model.node_count_model, config['node_count'], config['general']['patience'])
+    model.node_count_model.load_state_dict(node_count_state_dict)
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
