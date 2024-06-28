@@ -451,3 +451,23 @@ class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
 
                 next_frontiers = []
                 temp_edge_count = 0
+                for u in current_frontiers:
+                    self.input_x_n.append(x_n[u - 1])
+                    self.input_level.append(level)
+
+                    self.query_src.extend(src_candidates)
+                    self.query_dst.extend([u] * len(src_candidates))
+                    query_end += len(src_candidates)
+                    for t in src_candidates:
+                        if t in in_adj_list[u]:
+                            self.input_src.append(t)
+                            self.input_dst.append(u)
+                            temp_edge_count += 1
+                            self.label.append(1)
+                        else:
+                            self.label.append(0)
+
+                    for v in out_adj_list[u]:
+                        in_deg[v] -= 1
+                        if in_deg[v] == 0:
+                            next_frontiers.append(v)
