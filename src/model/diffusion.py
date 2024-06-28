@@ -131,3 +131,29 @@ class EdgeDiscreteDiffusion(nn.Module):
         self.betas = nn.Parameter(self.betas, requires_grad=False)
         self.alphas = nn.Parameter(self.alphas, requires_grad=False)
         self.alpha_bars = nn.Parameter(self.alpha_bars, requires_grad=False)
+
+    def apply_noise(self, z, t=None):
+        if t is None:
+            # Sample a timestep t uniformly from 0 to self.T.
+            # Note that the notation is slightly inconsistent with the paper.
+            # t=0 corresponds to t=1 in the paper, where corruption has already taken place.
+            t = torch.randint(low=0, high=self.T + 1, size=(1,))
+
+        import ipdb
+        ipdb.set_trace()
+
+        # TODO: Better doc
+        alpha_bar_t = self.alpha_bars[t.item()]
+        mean_in_deg = min(self.avg_in_deg, z.shape[1])
+        m_z_t = torch.ones(z.shape) * (mean_in_deg / z.shape[1])
+        prob_z_t = alpha_bar_t * z + (1 - alpha_bar_t) * m_z_t
+        z_t = torch.bernoulli(prob_z_t)
+
+        # Make sure each node has at least one edge.
+        isolated_mask = (z_t.sum(dim=1) == 0).bool()
+        if isolated_mask.any():
+            z_t[isolated_mask, prob_z_t[isolated_mask].argmax(dim=1)] = 1
+
+        z_t = z_t.reshape(-1)
+
+        return t, z_t
