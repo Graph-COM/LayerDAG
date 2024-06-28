@@ -471,3 +471,31 @@ class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
                         in_deg[v] -= 1
                         if in_deg[v] == 0:
                             next_frontiers.append(v)
+
+                input_n_end += len(current_frontiers)
+
+                # Record indices for retrieving edges in the previous layers
+                # for model input.
+                self.input_e_start.append(input_e_start)
+                self.input_e_end.append(input_e_end)
+
+                # Record indices for retrieving node attributes in the previous
+                # layers for model input.
+                self.input_n_start.append(input_n_start)
+                self.input_n_end.append(input_n_end)
+
+                if conditional:
+                    # Record the index for retrieving graph-level conditional
+                    # information for model input.
+                    self.input_g.append(input_g)
+
+                # Record indices for retrieving query node pairs
+                # for model predictions.
+                self.query_start.append(query_start)
+                self.query_end.append(query_end)
+
+                src_candidates.extend(current_frontiers)
+                prev_frontiers = current_frontiers
+                current_frontiers = next_frontiers
+                input_e_end += temp_edge_count
+                query_start = query_end
