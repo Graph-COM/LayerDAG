@@ -29,3 +29,8 @@ class LayerDAG(nn.Module):
 
         if isinstance(num_x_n_cat, int):
             num_x_n_cat = torch.LongTensor([num_x_n_cat])
+
+        self.dummy_x_n = num_x_n_cat - 1
+        hidden_size = len(num_x_n_cat) * node_count_encoder_config['x_n_emb_size'] +\
+            node_count_encoder_config['pe_emb_size'] +\
+            node_count_encoder_config['y_emb_size']
