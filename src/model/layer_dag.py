@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 __all__ = [
@@ -25,3 +26,6 @@ class LayerDAG(nn.Module):
             Case2: torch.LongTensor of shape (num_feats)
         """
         super().__init__()
+
+        if isinstance(num_x_n_cat, int):
+            num_x_n_cat = torch.LongTensor([num_x_n_cat])
