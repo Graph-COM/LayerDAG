@@ -179,3 +179,6 @@ class LayerDAG(nn.Module):
         hidden_size = len(num_x_n_cat) * node_count_encoder_config['x_n_emb_size'] +\
             node_count_encoder_config['pe_emb_size'] +\
             node_count_encoder_config['y_emb_size']
+        node_count_encoder = BiMPNNEncoder(num_x_n_cat,
+                                           hidden_size=hidden_size,
+                                           **node_count_encoder_config).to(device)
