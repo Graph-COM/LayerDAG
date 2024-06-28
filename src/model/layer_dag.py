@@ -74,6 +74,82 @@ class MultiEmbedding(nn.Module):
 
         return x_n_emb
 
+class BiMPNNEncoder(nn.Module):
+    def __init__(self,
+                 num_x_n_cat,
+                 x_n_emb_size,
+                 pe_emb_size,
+                 hidden_size,
+                 num_mpnn_layers,
+                 pe=None,
+                 y_emb_size=0,
+                 pool=None):
+        super().__init__()
+
+        self.pe = pe
+        if self.pe in ['relative_level', 'abs_level']:
+            self.level_emb = SinusoidalPE(pe_emb_size)
+        elif self.pe == 'relative_level_one_hot':
+            self.level_emb = OneHotPE(pe_emb_size)
+
+        self.x_n_emb = MultiEmbedding(num_x_n_cat, x_n_emb_size)
+        self.y_emb = SinusoidalPE(y_emb_size)
+
+        self.proj_input = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.GELU(),
+            nn.Linear(hidden_size, hidden_size)
+        )
+
+        self.mpnn_layers = nn.ModuleList()
+        for _ in range(num_mpnn_layers):
+            self.mpnn_layers.append(BiMPNNLayer(hidden_size, hidden_size))
+
+        self.project_output_n = nn.Sequential(
+            nn.Linear((num_mpnn_layers + 1) * hidden_size, hidden_size),
+            nn.GELU(),
+            nn.Linear(hidden_size, hidden_size)
+        )
+
+        self.pool = pool
+        if pool is not None:
+            self.bn_g = nn.BatchNorm1d(hidden_size)
+
+    def forward(self, A, x_n, abs_level, rel_level, y=None, A_n2g=None):
+        A_T = A.T
+        h_n = self.x_n_emb(x_n)
+
+        if self.pe == 'abs_level':
+            node_pe = self.level_emb(abs_level)
+
+        if self.pe in ['relative_level', 'relative_level_one_hot']:
+            node_pe = self.level_emb(rel_level)
+
+        if self.pe is not None:
+            h_n = torch.cat([h_n, node_pe], dim=-1)
+
+        if y is not None:
+            h_y = self.y_emb(y)
+            h_n = torch.cat([h_n, h_y], dim=-1)
+
+        h_n = self.proj_input(h_n)
+        h_n_cat = [h_n]
+        for layer in self.mpnn_layers:
+            h_n = layer(A, A_T, h_n)
+            h_n_cat.append(h_n)
+        h_n = torch.cat(h_n_cat, dim=-1)
+        h_n = self.project_output_n(h_n)
+
+        if self.pool is None:
+            return h_n
+        elif self.pool == 'sum':
+            h_g = A_n2g @ h_n
+            return self.bn_g(h_g)
+        elif self.pool == 'mean':
+            h_g = A_n2g @ h_n
+            h_g = h_g / A_n2g.sum(dim=1).unsqueeze(-1)
+            return self.bn_g(h_g)
+
 class LayerDAG(nn.Module):
     def __init__(self,
                  device,
