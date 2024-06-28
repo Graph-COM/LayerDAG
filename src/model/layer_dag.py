@@ -1,9 +1,29 @@
+import math
 import torch
 import torch.nn as nn
 
 __all__ = [
     'LayerDAG'
 ]
+
+class SinusoidalPE(nn.Module):
+    def __init__(self, pe_size):
+        super().__init__()
+
+        self.pe_size = pe_size
+        if pe_size > 0:
+            self.div_term = torch.exp(torch.arange(0, pe_size, 2) *
+                                      (-math.log(10000.0) / pe_size))
+            self.div_term = nn.Parameter(self.div_term, requires_grad=False)
+
+    def forward(self, position):
+        if self.pe_size == 0:
+            return torch.zeros(len(position), 0).to(position.device)
+
+        return torch.cat([
+            torch.sin(position * self.div_term),
+            torch.cos(position * self.div_term)
+        ], dim=-1)
 
 class LayerDAG(nn.Module):
     def __init__(self,
