@@ -33,6 +33,33 @@ def main_node_count(device, train_set, val_set, model, config, patience):
     num_patient_epochs = 0
     for epoch in range(config['num_epochs']):
         model.train()
+        for batch_data in tqdm(train_loader):
+            if len(batch_data) == 8:
+                batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+                    batch_rel_level, batch_y, batch_n2g_index, batch_label = batch_data
+                batch_y = batch_y.to(device)
+            else:
+                batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+                    batch_rel_level, batch_n2g_index, batch_label = batch_data
+                batch_y = None
+
+            num_nodes = len(batch_x_n)
+            batch_A = dglsp.spmatrix(batch_edge_index, shape=(num_nodes, num_nodes)).to(device)
+            batch_x_n = batch_x_n.to(device)
+            batch_abs_level = batch_abs_level.to(device)
+            batch_rel_level = batch_rel_level.to(device)
+            batch_A_n2g = dglsp.spmatrix(batch_n2g_index, shape=(batch_size, num_nodes)).to(device)
+            batch_label = batch_label.to(device)
+
+            batch_pred = model(batch_A, batch_x_n, batch_abs_level,
+                               batch_rel_level, batch_A_n2g, batch_y)
+
+            loss = criterion(batch_pred, batch_label)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            wandb.log({'node_count/loss': loss.item()})
 
 def main(args):
     torch.set_num_threads(args.num_threads)
