@@ -150,6 +150,26 @@ class BiMPNNEncoder(nn.Module):
             h_g = h_g / A_n2g.sum(dim=1).unsqueeze(-1)
             return self.bn_g(h_g)
 
+class GraphClassifier(nn.Module):
+    def __init__(self,
+                 graph_encoder,
+                 emb_size,
+                 num_classes):
+        super().__init__()
+
+        self.graph_encoder = graph_encoder
+        self.predictor = nn.Sequential(
+            nn.Linear(emb_size, emb_size),
+            nn.GELU(),
+            nn.Linear(emb_size, num_classes)
+        )
+
+    def forward(self, A, x_n, abs_level, rel_level, A_n2g, y=None):
+        h_g = self.graph_encoder(A, x_n, abs_level, rel_level, y, A_n2g)
+        pred_g = self.predictor(h_g)
+
+        return pred_g
+
 class LayerDAG(nn.Module):
     def __init__(self,
                  device,
