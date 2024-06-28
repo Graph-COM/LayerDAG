@@ -256,7 +256,6 @@ class TransformerLayer(nn.Module):
         # (B, H, max_num_nodes, max_num_nodes)
         dot = torch.matmul(q_padded, k_padded.transpose(-1, -2)) * self.scale
         # Mask unnormalized attention logits for non-existent nodes.
-        # TODO: Revisit for directed graphs.
         dot = dot.masked_fill(
             pad_mask.unsqueeze(1).unsqueeze(2),
             float('-inf'),
@@ -332,6 +331,5 @@ class LayerDAG(nn.Module):
             node_pred_graph_encoder_config['y_emb_size']
         node_pred_graph_encoder = BiMPNNEncoder(num_x_n_cat, hidden_size=hidden_size,
                                                 **node_pred_graph_encoder_config).to(device)
-
         import ipdb
         ipdb.set_trace()
