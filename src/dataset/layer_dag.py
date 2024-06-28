@@ -5,7 +5,8 @@ from torch.utils.data import Dataset
 
 __all__ = ['LayerDAGNodeCountDataset',
            'LayerDAGNodePredDataset',
-           'LayerDAGEdgePredDataset']
+           'LayerDAGEdgePredDataset',
+           'collate_node_count']
 
 class LayerDAGBaseDataset(Dataset):
     def __init__(self, conditional=False):
@@ -539,3 +540,58 @@ class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
 
         import ipdb
         ipdb.set_trace()
+
+def collate_common(src, dst, x_n, abs_level, rel_level):
+    num_nodes_cumsum = torch.cumsum(torch.tensor(
+        [0] + [len(x_n_i) for x_n_i in x_n]), dim=0)
+
+    batch_size = len(x_n)
+    src_ = []
+    dst_ = []
+    for i in range(batch_size):
+        src_.append(src[i] + num_nodes_cumsum[i])
+        dst_.append(dst[i] + num_nodes_cumsum[i])
+    src = torch.cat(src_, dim=0)
+    dst = torch.cat(dst_, dim=0)
+    edge_index = torch.stack([dst, src])
+
+    x_n = torch.cat(x_n, dim=0).long()
+    abs_level = torch.cat(abs_level, dim=0).float().unsqueeze(-1)
+    rel_level = torch.cat(rel_level, dim=0).float().unsqueeze(-1)
+
+    # Prepare edge index for node to graph mapping
+    nids = []
+    gids = []
+    for i in range(batch_size):
+        nids.append(torch.arange(num_nodes_cumsum[i], num_nodes_cumsum[i+1]).long())
+        gids.append(torch.ones(num_nodes_cumsum[i+1] - num_nodes_cumsum[i]).fill_(i).long())
+    nids = torch.cat(nids, dim=0)
+    gids = torch.cat(gids, dim=0)
+    n2g_index = torch.stack([gids, nids])
+
+    return batch_size, edge_index, x_n, abs_level, rel_level, n2g_index
+
+def collate_node_count(data):
+    if len(data[0]) == 7:
+        batch_src, batch_dst, batch_x_n, batch_abs_level, batch_rel_level, batch_y, batch_label = map(list, zip(*data))
+
+        y_ = []
+        for i in range(len(batch_x_n)):
+            y_.extend([batch_y[i]] * len(batch_x_n[i]))
+        batch_y = torch.tensor(y_).unsqueeze(-1)
+    else:
+        batch_src, batch_dst, batch_x_n, batch_abs_level, batch_rel_level, batch_label = map(
+            list, zip(*data))
+
+    batch_size, batch_edge_index, batch_x_n, batch_abs_level, batch_rel_level,\
+        batch_n2g_index = collate_common(
+            batch_src, batch_dst, batch_x_n, batch_abs_level, batch_rel_level)
+
+    batch_label = torch.stack(batch_label)
+
+    if len(data[0]) == 7:
+        return batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+            batch_rel_level, batch_y, batch_n2g_index, batch_label
+    else:
+        return batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+            batch_rel_level, batch_n2g_index, batch_label

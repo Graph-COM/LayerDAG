@@ -11,8 +11,11 @@ from tqdm import tqdm
 
 from setup_utils import set_seed, load_yaml
 from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
-    LayerDAGNodePredDataset, LayerDAGEdgePredDataset
+    LayerDAGNodePredDataset, LayerDAGEdgePredDataset, collate_node_count
 from src.model import DiscreteDiffusion, EdgeDiscreteDiffusion, LayerDAG
+
+def main_node_count(device, train_set, val_set, model, config, patience):
+    pass
 
 def main(args):
     torch.set_num_threads(args.num_threads)
