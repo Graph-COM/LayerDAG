@@ -136,13 +136,27 @@ def eval_node_pred(device, val_loader, model):
         if len(batch_data) == 11:
             batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
                 batch_rel_level, batch_n2g_index, batch_z_t, batch_t, query2g,\
-                    num_query_cumsum, batch_z = batch_data
+                num_query_cumsum, batch_z = batch_data
             batch_y = None
         else:
             batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
                 batch_rel_level, batch_n2g_index, batch_z_t, batch_t, batch_y,\
-                    query2g, num_query_cumsum, batch_z = batch_data
+                query2g, num_query_cumsum, batch_z = batch_data
             batch_y = batch_y.to(device)
+
+        num_nodes = len(batch_x_n)
+        batch_A = dglsp.spmatrix(
+            batch_edge_index, shape=(num_nodes, num_nodes)).to(device)
+        batch_x_n = batch_x_n.to(device)
+        batch_abs_level = batch_abs_level.to(device)
+        batch_rel_level = batch_rel_level.to(device)
+        batch_A_n2g = dglsp.spmatrix(
+            batch_n2g_index, shape=(batch_size, num_nodes)).to(device)
+        batch_z_t = batch_z_t.to(device)
+        batch_t = batch_t.to(device)
+        query2g = query2g.to(device)
+        num_query_cumsum = num_query_cumsum.to(device)
+        batch_z = batch_z.to(device)
 
 def main_node_pred(device, train_set, val_set, model, config, patience):
     train_loader = DataLoader(train_set,
