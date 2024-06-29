@@ -653,11 +653,12 @@ def collate_edge_pred(data):
     if len(data[0]) == 11:
         batch_src, batch_dst, batch_noisy_src, batch_noisy_dst, batch_x_n,\
             batch_abs_level, batch_rel_level, batch_t, batch_query_src,\
-                batch_query_dst, batch_label = map(list, zip(*data))
+            batch_query_dst, batch_label = map(list, zip(*data))
     else:
         batch_src, batch_dst, batch_noisy_src, batch_noisy_dst, batch_x_n,\
             batch_abs_level, batch_rel_level, batch_t, batch_y,\
-                batch_query_src, batch_query_dst, batch_label = map(list, zip(*data))
+            batch_query_src, batch_query_dst, batch_label = map(list, zip(*data))
+        # Broadcast graph-level conditional information to nodes.
         y_ = []
         for i in range(len(batch_x_n)):
             y_.extend([batch_y[i]] * len(batch_x_n[i]))
