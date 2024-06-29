@@ -596,4 +596,41 @@ def collate_node_count(data):
             batch_rel_level, batch_n2g_index, batch_label
 
 def collate_node_pred(data):
-    pass
+    if len(data[0]) == 8:
+        batch_src, batch_dst, batch_x_n, batch_abs_level, batch_rel_level,\
+            batch_z_t, batch_t, batch_z = map(list, zip(*data))
+    else:
+        batch_src, batch_dst, batch_x_n, batch_abs_level, batch_rel_level,\
+            batch_z_t, batch_t, batch_y, batch_z = map(list, zip(*data))
+        # Broadcast graph-level conditional information to nodes.
+        y_ = []
+        for i in range(len(batch_x_n)):
+            y_.extend([batch_y[i]] * len(batch_x_n[i]))
+        batch_y = torch.tensor(y_).unsqueeze(-1)
+
+    batch_size, batch_edge_index, batch_x_n, batch_abs_level, batch_rel_level,\
+        batch_n2g_index = collate_common(
+            batch_src, batch_dst, batch_x_n, batch_abs_level, batch_rel_level)
+
+    num_query_cumsum = torch.cumsum(torch.tensor(
+        [0] + [len(z_t_i) for z_t_i in batch_z_t]), dim=0)
+    query2g = []
+    for i in range(batch_size):
+        query2g.append(torch.ones(num_query_cumsum[i+1] - num_query_cumsum[i]).fill_(i).long())
+    query2g = torch.cat(query2g)
+
+    batch_z_t = torch.cat(batch_z_t)
+    batch_t = torch.cat(batch_t).unsqueeze(-1)
+    batch_z = torch.cat(batch_z)
+
+    if batch_z.ndim == 1:
+        batch_z = batch_z.unsqueeze(-1)
+
+    if len(data[0]) == 8:
+        return batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+            batch_rel_level, batch_n2g_index, batch_z_t, batch_t, query2g,\
+                num_query_cumsum, batch_z
+    else:
+        return batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+            batch_rel_level, batch_n2g_index, batch_z_t, batch_t, batch_y,\
+                query2g, num_query_cumsum, batch_z
