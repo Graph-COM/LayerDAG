@@ -11,7 +11,8 @@ from tqdm import tqdm
 
 from setup_utils import set_seed, load_yaml
 from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
-    LayerDAGNodePredDataset, LayerDAGEdgePredDataset, collate_node_count
+    LayerDAGNodePredDataset, LayerDAGEdgePredDataset, collate_node_count,\
+    collate_node_pred
 from src.model import DiscreteDiffusion, EdgeDiscreteDiffusion, LayerDAG
 
 @torch.no_grad()
@@ -127,7 +128,13 @@ def main_node_count(device, train_set, val_set, model, config, patience):
     return best_state_dict
 
 def main_node_pred(device, train_set, val_set, model, config, patience):
-    pass
+    train_loader = DataLoader(train_set,
+                              shuffle=True,
+                              collate_fn=collate_node_pred,
+                              **config['loader'])
+    val_loader = DataLoader(val_set,
+                            collate_fn=collate_node_pred,
+                            **config['loader'])
 
 def main(args):
     torch.set_num_threads(args.num_threads)
