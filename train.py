@@ -138,6 +138,12 @@ def main_node_pred(device, train_set, val_set, model, config, patience):
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), **config['optimizer'])
 
+    best_val_nll = float('inf')
+    best_state_dict = deepcopy(model.state_dict())
+    num_patient_epochs = 0
+    for epoch in range(config['num_epochs']):
+        pass
+
 def main(args):
     torch.set_num_threads(args.num_threads)
 
