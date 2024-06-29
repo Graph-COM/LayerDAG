@@ -351,8 +351,6 @@ class LayerDAGNodePredDataset(LayerDAGBaseDataset):
 
         z = self.input_x_n[label_start:label_end]
         t, z_t = self.node_diffusion.apply_noise(z)
-        import ipdb
-        ipdb.set_trace()
 
         if self.conditional:
             input_g = self.input_g[index]

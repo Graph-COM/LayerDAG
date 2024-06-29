@@ -82,9 +82,6 @@ class DiscreteDiffusion(nn.Module):
         if z.ndim == 1:
             z = z.unsqueeze(-1)
 
-        import ipdb
-        ipdb.set_trace()
-
         _, D = z.shape
         z_t_list = []
         for d in range(D):
