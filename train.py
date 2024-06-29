@@ -205,6 +205,49 @@ def main_node_pred(device, train_set, val_set, model, config, patience):
             break
 
         model.train()
+        for batch_data in tqdm(train_loader):
+            if len(batch_data) == 11:
+                batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+                    batch_rel_level, batch_n2g_index, batch_z_t, batch_t,\
+                    query2g, num_query_cumsum, batch_z = batch_data
+                batch_y = None
+            else:
+                batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+                    batch_rel_level, batch_n2g_index, batch_z_t, batch_t,\
+                    batch_y, query2g, num_query_cumsum, batch_z = batch_data
+                batch_y = batch_y.to(device)
+
+            num_nodes = len(batch_x_n)
+            batch_A = dglsp.spmatrix(
+                batch_edge_index, shape=(num_nodes, num_nodes)).to(device)
+            batch_x_n = batch_x_n.to(device)
+            batch_abs_level = batch_abs_level.to(device)
+            batch_rel_level = batch_rel_level.to(device)
+            batch_A_n2g = dglsp.spmatrix(
+                batch_n2g_index, shape=(batch_size, num_nodes)).to(device)
+            batch_z_t = batch_z_t.to(device)
+            batch_t = batch_t.to(device)
+            query2g = query2g.to(device)
+            num_query_cumsum = num_query_cumsum.to(device)
+            batch_z = batch_z.to(device)
+
+            batch_pred = model(batch_A, batch_x_n, batch_abs_level,
+                               batch_rel_level, batch_A_n2g, batch_z_t,
+                               batch_t, query2g, num_query_cumsum, batch_y)
+
+            loss = 0
+            D = len(batch_pred)
+            for d in range(D):
+                loss = loss + criterion(batch_pred[d], batch_z[:, d])
+            loss /= D
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            wandb.log({'node_pred/loss': loss.item()})
+
+    return best_state_dict
 
 def main(args):
     torch.set_num_threads(args.num_threads)
