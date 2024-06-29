@@ -33,6 +33,8 @@ To train a LayerDAG model,
 python train.py --config_file configs/LayerDAG/tpu_tile.yaml
 ```
 
+The trained model checkpoint will be saved to a file `model_tpu_tile_{time_stamp}.pth`.
+
 ## Sample
 
 ```bash
