@@ -56,7 +56,7 @@ def eval_tpu_tile(args, device, model):
     os.makedirs(sample_dir, exist_ok=True)
 
     evaluator = TPUTileEvaluator()
-    train_set, val_set, _ = load_dataset()
+    train_set, val_set, _ = load_dataset('tpu_tile')
 
     train_syn_set = sample_tpu_subset(args, device, train_set.dummy_category, model, train_set)
     val_syn_set = sample_tpu_subset(args, device, train_set.dummy_category, model, val_set)
@@ -70,13 +70,13 @@ def eval_tpu_tile(args, device, model):
 def main(args):
     torch.set_num_threads(args.num_threads)
 
-    device_str = "cuda" if torch.cuda.is_available() else "cpu"
+    device_str = 'cuda' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_str)
 
     ckpt = torch.load(args.model_path)
 
     dataset = ckpt['dataset']
-    assert dataset == "tpu_tile"
+    assert dataset == 'tpu_tile'
 
     node_diffusion = DiscreteDiffusion(**ckpt['node_diffusion_config'])
     edge_diffusion = EdgeDiscreteDiffusion(**ckpt['edge_diffusion_config'])
