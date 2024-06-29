@@ -135,6 +135,8 @@ def main_node_pred(device, train_set, val_set, model, config, patience):
     val_loader = DataLoader(val_set,
                             collate_fn=collate_node_pred,
                             **config['loader'])
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), **config['optimizer'])
 
 def main(args):
     torch.set_num_threads(args.num_threads)

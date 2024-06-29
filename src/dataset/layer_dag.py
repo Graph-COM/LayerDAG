@@ -6,7 +6,8 @@ from torch.utils.data import Dataset
 __all__ = ['LayerDAGNodeCountDataset',
            'LayerDAGNodePredDataset',
            'LayerDAGEdgePredDataset',
-           'collate_node_count']
+           'collate_node_count',
+           'collate_node_pred']
 
 class LayerDAGBaseDataset(Dataset):
     def __init__(self, conditional=False):
@@ -595,3 +596,6 @@ def collate_node_count(data):
     else:
         return batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
             batch_rel_level, batch_n2g_index, batch_label
+
+def collate_node_pred(data):
+    pass
