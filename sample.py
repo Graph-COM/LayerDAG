@@ -62,7 +62,6 @@ def eval_tpu_tile(args, device, model):
     val_syn_set = sample_tpu_subset(args, device, train_set.dummy_category, model, val_set)
 
     evaluator.eval(train_syn_set, val_syn_set)
-    evaluator.summary()
 
     dump_to_file(train_syn_set, 'train.pth', sample_dir)
     dump_to_file(val_syn_set, 'val.pth', sample_dir)
