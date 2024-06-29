@@ -130,6 +130,10 @@ def main_node_count(device, train_set, val_set, model, config, patience):
 @torch.no_grad()
 def eval_node_pred(device, val_loader, model):
     model.eval()
+    total_nll = 0
+    total_count = 0
+    for batch_data in tqdm(val_loader):
+        pass
 
 def main_node_pred(device, train_set, val_set, model, config, patience):
     train_loader = DataLoader(train_set,
