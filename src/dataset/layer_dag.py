@@ -650,4 +650,58 @@ def collate_node_pred(data):
             query2g, num_query_cumsum, batch_z
 
 def collate_edge_pred(data):
-    pass
+    if len(data[0]) == 11:
+        batch_src, batch_dst, batch_noisy_src, batch_noisy_dst, batch_x_n,\
+            batch_abs_level, batch_rel_level, batch_t, batch_query_src,\
+                batch_query_dst, batch_label = map(list, zip(*data))
+    else:
+        batch_src, batch_dst, batch_noisy_src, batch_noisy_dst, batch_x_n,\
+            batch_abs_level, batch_rel_level, batch_t, batch_y,\
+                batch_query_src, batch_query_dst, batch_label = map(list, zip(*data))
+        y_ = []
+        for i in range(len(batch_x_n)):
+            y_.extend([batch_y[i]] * len(batch_x_n[i]))
+        batch_y = torch.tensor(y_).unsqueeze(-1)
+
+    num_nodes_cumsum = torch.cumsum(torch.tensor(
+        [0] + [len(x_n_i) for x_n_i in batch_x_n]), dim=0)
+
+    batch_size = len(batch_x_n)
+    src_ = []
+    dst_ = []
+    noisy_src_ = []
+    noisy_dst_ = []
+    query_src_ = []
+    query_dst_ = []
+    t_ = []
+    for i in range(batch_size):
+        src_.append(batch_src[i] + num_nodes_cumsum[i])
+        dst_.append(batch_dst[i] + num_nodes_cumsum[i])
+        noisy_src_.append(batch_noisy_src[i] + num_nodes_cumsum[i])
+        noisy_dst_.append(batch_noisy_dst[i] + num_nodes_cumsum[i])
+        query_src_.append(batch_query_src[i] + num_nodes_cumsum[i])
+        query_dst_.append(batch_query_dst[i] + num_nodes_cumsum[i])
+        t_.append(batch_t[i].expand(len(batch_query_src[i]), -1))
+
+    src = torch.cat(src_, dim=0)
+    dst = torch.cat(dst_, dim=0)
+    edge_index = torch.stack([dst, src])
+    noisy_src = torch.cat(noisy_src_, dim=0)
+    noisy_dst = torch.cat(noisy_dst_, dim=0)
+    noisy_edge_index = torch.stack([noisy_dst, noisy_src])
+    query_src = torch.cat(query_src_)
+    query_dst = torch.cat(query_dst_)
+    t = torch.cat(t_)
+
+    batch_x_n = torch.cat(batch_x_n, dim=0).long()
+    batch_abs_level = torch.cat(batch_abs_level, dim=0).float().unsqueeze(-1)
+    batch_rel_level = torch.cat(batch_rel_level, dim=0).float().unsqueeze(-1)
+
+    batch_label = torch.cat(batch_label)
+
+    if len(data[0]) == 11:
+        return edge_index, noisy_edge_index, batch_x_n, batch_abs_level,\
+            batch_rel_level, t, query_src, query_dst, batch_label
+    else:
+        return edge_index, noisy_edge_index, batch_x_n, batch_abs_level,\
+            batch_rel_level, t, batch_y, query_src, query_dst, batch_label
