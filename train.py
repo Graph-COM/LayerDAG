@@ -12,7 +12,7 @@ from tqdm import tqdm
 from setup_utils import set_seed, load_yaml
 from src.dataset import load_dataset, LayerDAGNodeCountDataset,\
     LayerDAGNodePredDataset, LayerDAGEdgePredDataset, collate_node_count,\
-    collate_node_pred
+    collate_node_pred, collate_edge_pred
 from src.model import DiscreteDiffusion, EdgeDiscreteDiffusion, LayerDAG
 
 @torch.no_grad()
@@ -249,6 +249,44 @@ def main_node_pred(device, train_set, val_set, model, config, patience):
 
     return best_state_dict
 
+@torch.no_grad()
+def eval_edge_pred(device, val_loader, model):
+    model.eval()
+    total_nll = 0
+    total_count = 0
+    for batch_data in tqdm(val_loader):
+        pass
+
+def main_edge_pred(device, train_set, val_set, model, config, patience):
+    train_loader = DataLoader(train_set,
+                              shuffle=True,
+                              collate_fn=collate_edge_pred,
+                              **config['loader'])
+    val_loader = DataLoader(val_set,
+                            collate_fn=collate_edge_pred,
+                            **config['loader'])
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), **config['optimizer'])
+
+    best_val_nll = float('inf')
+    best_state_dict = deepcopy(model.state_dict())
+    num_patient_epochs = 0
+    for epoch in range(config['num_epochs']):
+        val_nll = eval_edge_pred(device, val_loader, model)
+        if val_nll < best_val_nll:
+            best_val_nll = val_nll
+            best_state_dict = deepcopy(model.state_dict())
+            num_patient_epochs = 0
+        else:
+            num_patient_epochs += 1
+        wandb.log({'edge_pred/epoch': epoch,
+                   'edge_pred/val_nll': val_nll,
+                   'edge_pred/best_val_nll': best_val_nll,
+                   'edge_pred/num_patient_epochs': num_patient_epochs})
+
+        if (patience is not None) and (num_patient_epochs == patience):
+            break
+
 def main(args):
     torch.set_num_threads(args.num_threads)
 
@@ -323,6 +361,20 @@ def main(args):
         device, train_node_pred_dataset, val_node_pred_dataset,
         model.node_pred_model, config['node_pred'], config['general']['patience'])
     model.node_pred_model.load_state_dict(node_pred_state_dict)
+
+    edge_pred_state_dict = main_edge_pred(
+        device, train_edge_pred_dataset, val_edge_pred_dataset,
+        model.edge_pred_model, config['edge_pred'], config['general']['patience'])
+    model.edge_pred_model.load_state_dict(edge_pred_state_dict)
+
+    save_path = f'model_{dataset}_{ts}.pth'
+    torch.save({
+        'dataset': dataset,
+        'node_diffusion_config': node_diffusion_config,
+        'edge_diffusion_config': edge_diffusion_config,
+        'model_config': model_config,
+        'model_state_dict': model.state_dict()
+    }, save_path)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
