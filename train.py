@@ -127,6 +127,10 @@ def main_node_count(device, train_set, val_set, model, config, patience):
 
     return best_state_dict
 
+@torch.no_grad()
+def eval_node_pred(device, val_loader, model):
+    model.eval()
+
 def main_node_pred(device, train_set, val_set, model, config, patience):
     train_loader = DataLoader(train_set,
                               shuffle=True,
@@ -142,7 +146,7 @@ def main_node_pred(device, train_set, val_set, model, config, patience):
     best_state_dict = deepcopy(model.state_dict())
     num_patient_epochs = 0
     for epoch in range(config['num_epochs']):
-        pass
+        val_nll = eval_node_pred(device, val_loader, model)
 
 def main(args):
     torch.set_num_threads(args.num_threads)
