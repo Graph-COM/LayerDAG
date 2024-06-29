@@ -538,9 +538,21 @@ class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
         unique_dst = torch.unique(query_dst, sorted=False)
         label_adj = label.reshape(len(unique_dst), len(unique_src))
 
-        import ipdb
-        ipdb.set_trace()
         t, label_t = self.edge_diffusion.apply_noise(label_adj)
+
+        mask = (label_t == 1)
+        noisy_src = query_src[mask]
+        noisy_dst = query_dst[mask]
+
+        if self.conditional:
+            input_g = self.input_g[index]
+            input_y = self.input_y[input_g].item()
+
+            return input_src, input_dst, noisy_src, noisy_dst, input_x_n,\
+                input_abs_level, input_rel_level, t, input_y, query_src, query_dst, label
+        else:
+            return input_src, input_dst, noisy_src, noisy_dst, input_x_n,\
+                input_abs_level, input_rel_level, t, query_src, query_dst, label
 
 def collate_common(src, dst, x_n, abs_level, rel_level):
     num_nodes_cumsum = torch.cumsum(torch.tensor(
