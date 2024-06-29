@@ -133,7 +133,16 @@ def eval_node_pred(device, val_loader, model):
     total_nll = 0
     total_count = 0
     for batch_data in tqdm(val_loader):
-        pass
+        if len(batch_data) == 11:
+            batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+                batch_rel_level, batch_n2g_index, batch_z_t, batch_t, query2g,\
+                    num_query_cumsum, batch_z = batch_data
+            batch_y = None
+        else:
+            batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
+                batch_rel_level, batch_n2g_index, batch_z_t, batch_t, batch_y,\
+                    query2g, num_query_cumsum, batch_z = batch_data
+            batch_y = batch_y.to(device)
 
 def main_node_pred(device, train_set, val_set, model, config, patience):
     train_loader = DataLoader(train_set,

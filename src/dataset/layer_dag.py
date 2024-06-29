@@ -629,8 +629,8 @@ def collate_node_pred(data):
     if len(data[0]) == 8:
         return batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
             batch_rel_level, batch_n2g_index, batch_z_t, batch_t, query2g,\
-                num_query_cumsum, batch_z
+            num_query_cumsum, batch_z
     else:
         return batch_size, batch_edge_index, batch_x_n, batch_abs_level,\
             batch_rel_level, batch_n2g_index, batch_z_t, batch_t, batch_y,\
-                query2g, num_query_cumsum, batch_z
+            query2g, num_query_cumsum, batch_z
