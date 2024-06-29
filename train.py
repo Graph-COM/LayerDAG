@@ -189,6 +189,22 @@ def main_node_pred(device, train_set, val_set, model, config, patience):
     num_patient_epochs = 0
     for epoch in range(config['num_epochs']):
         val_nll = eval_node_pred(device, val_loader, model)
+        if val_nll < best_val_nll:
+            best_val_nll = val_nll
+            best_state_dict = deepcopy(model.state_dict())
+            num_patient_epochs = 0
+        else:
+            num_patient_epochs += 1
+
+        wandb.log({'node_pred/epoch': epoch,
+                   'node_pred/val_nll': val_nll,
+                   'node_pred/best_val_nll': best_val_nll,
+                   'node_pred/num_patient_epochs': num_patient_epochs})
+
+        if (patience is not None) and (num_patient_epochs == patience):
+            break
+
+        model.train()
 
 def main(args):
     torch.set_num_threads(args.num_threads)
