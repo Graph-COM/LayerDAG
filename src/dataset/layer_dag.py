@@ -540,6 +540,7 @@ class LayerDAGEdgePredDataset(LayerDAGBaseDataset):
 
         import ipdb
         ipdb.set_trace()
+        t, label_t = self.edge_diffusion.apply_noise(label_adj)
 
 def collate_common(src, dst, x_n, abs_level, rel_level):
     num_nodes_cumsum = torch.cumsum(torch.tensor(

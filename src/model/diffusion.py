@@ -130,17 +130,27 @@ class EdgeDiscreteDiffusion(nn.Module):
         self.alpha_bars = nn.Parameter(self.alpha_bars, requires_grad=False)
 
     def apply_noise(self, z, t=None):
+        """
+        Parameters
+        ----------
+        z : torch.Tensor of shape (A, B)
+            Adjacency matrix.
+            A is the number of candidate destination nodes.
+            B is the number of candidate source nodes.
+
+        Returns
+        -------
+        z_t : torch.Tensor of shape (A * B)
+        """
         if t is None:
             # Sample a timestep t uniformly from 0 to self.T.
             # Note that the notation is slightly inconsistent with the paper.
             # t=0 corresponds to t=1 in the paper, where corruption has already taken place.
             t = torch.randint(low=0, high=self.T + 1, size=(1,))
 
-        import ipdb
-        ipdb.set_trace()
-
         # TODO: Better doc
         alpha_bar_t = self.alpha_bars[t.item()]
+        # Marginal probability for an edge to exist.
         mean_in_deg = min(self.avg_in_deg, z.shape[1])
         m_z_t = torch.ones(z.shape) * (mean_in_deg / z.shape[1])
         prob_z_t = alpha_bar_t * z + (1 - alpha_bar_t) * m_z_t
