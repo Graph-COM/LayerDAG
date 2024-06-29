@@ -164,3 +164,21 @@ class EdgeDiscreteDiffusion(nn.Module):
         z_t = z_t.reshape(-1)
 
         return t, z_t
+
+    def get_Qs(self,
+               alpha_t,
+               alpha_bar_s,
+               alpha_bar_t,
+               marginal):
+        M = torch.zeros(2)
+        M = torch.tensor([
+            1 - marginal, marginal
+        ])
+        M = M.unsqueeze(0).expand(2, -1)
+        I = torch.eye(2)
+
+        Q_t = alpha_t * I + (1 - alpha_t) * M
+        Q_bar_s = alpha_bar_s * I + (1 - alpha_bar_s) * M
+        Q_bar_t = alpha_bar_t * I + (1 - alpha_bar_t) * M
+
+        return Q_t, Q_bar_s, Q_bar_t
