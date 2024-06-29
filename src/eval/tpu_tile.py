@@ -30,12 +30,8 @@ class TPUTileEvaluator:
         print('Real')
         print('------------------')
         print(f'Pearson Coeff: {self.mpnn_evaluator.real_pearson_coeff}')
-        print(f'Spearman Coeff: {self.mpnn_evaluator.real_spearman_coeff}')
-        print(f'MAE: {self.mpnn_evaluator.real_mae}')
         print('\n')
 
         print('Synthetic')
         print('------------------')
         print(f'Pearson Coeff: {self.mpnn_evaluator.syn_pearson_coeff}')
-        print(f'Spearman Coeff: {self.mpnn_evaluator.syn_spearman_coeff}')
-        print(f'MAE: {self.mpnn_evaluator.syn_mae}')
