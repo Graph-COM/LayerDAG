@@ -158,6 +158,21 @@ def eval_node_pred(device, val_loader, model):
         num_query_cumsum = num_query_cumsum.to(device)
         batch_z = batch_z.to(device)
 
+        batch_logits = model(batch_A, batch_x_n, batch_abs_level,
+                             batch_rel_level, batch_A_n2g, batch_z_t, batch_t,
+                             query2g, num_query_cumsum, batch_y)
+
+        D = len(batch_logits)
+        batch_num_queries = batch_logits[0].shape[0]
+        for d in range(D):
+            batch_logits_d = batch_logits[d]
+            batch_nll_d = -batch_logits_d.log_softmax(dim=-1)
+            batch_nll_d = batch_nll_d[torch.arange(batch_num_queries).to(device), batch_z[:, d]]
+            total_nll += batch_nll_d.sum().item()
+        total_count += batch_num_queries * D
+
+    return total_nll / total_count
+
 def main_node_pred(device, train_set, val_set, model, config, patience):
     train_loader = DataLoader(train_set,
                               shuffle=True,
