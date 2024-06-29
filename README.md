@@ -37,13 +37,13 @@ The trained model checkpoint will be saved to a file `model_tpu_tile_{time_stamp
 
 ## Sample
 
-```bash
-```
-
-## Eval
+For sampling and evaluation,
 
 ```bash
+python sample.py --model_path X
 ```
+
+where `X` is the file `model_tpu_tile_{time_stamp}.pth` saved above.
 
 ## Frequently Asked Questions
 
