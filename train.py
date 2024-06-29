@@ -332,7 +332,7 @@ def main_edge_pred(device, train_set, val_set, model, config, patience):
                     batch_abs_level, batch_rel_level, batch_t,\
                     batch_y, batch_query_src, batch_query_dst, batch_label = batch_data
                 batch_y = batch_y.to(device)
-                
+
             num_nodes = len(batch_x_n)
             batch_A = dglsp.spmatrix(
                 torch.cat([batch_edge_index, batch_noisy_edge_index], dim=1),
@@ -422,15 +422,15 @@ def main(args):
                      edge_diffusion=edge_diffusion,
                      **model_config)
 
-    # node_count_state_dict = main_node_count(
-    #     device, train_node_count_dataset, val_node_count_dataset,
-    #     model.node_count_model, config['node_count'], config['general']['patience'])
-    # model.node_count_model.load_state_dict(node_count_state_dict)
+    node_count_state_dict = main_node_count(
+        device, train_node_count_dataset, val_node_count_dataset,
+        model.node_count_model, config['node_count'], config['general']['patience'])
+    model.node_count_model.load_state_dict(node_count_state_dict)
 
-    # node_pred_state_dict = main_node_pred(
-    #     device, train_node_pred_dataset, val_node_pred_dataset,
-    #     model.node_pred_model, config['node_pred'], config['general']['patience'])
-    # model.node_pred_model.load_state_dict(node_pred_state_dict)
+    node_pred_state_dict = main_node_pred(
+        device, train_node_pred_dataset, val_node_pred_dataset,
+        model.node_pred_model, config['node_pred'], config['general']['patience'])
+    model.node_pred_model.load_state_dict(node_pred_state_dict)
 
     edge_pred_state_dict = main_edge_pred(
         device, train_edge_pred_dataset, val_edge_pred_dataset,
