@@ -320,6 +320,43 @@ def main_edge_pred(device, train_set, val_set, model, config, patience):
         if (patience is not None) and (num_patient_epochs == patience):
             break
 
+        model.train()
+        for batch_data in tqdm(train_loader):
+            if len(batch_data) == 9:
+                batch_edge_index, batch_noisy_edge_index, batch_x_n,\
+                    batch_abs_level, batch_rel_level, batch_t,\
+                    batch_query_src, batch_query_dst, batch_label = batch_data
+                batch_y = None
+            else:
+                batch_edge_index, batch_noisy_edge_index, batch_x_n,\
+                    batch_abs_level, batch_rel_level, batch_t,\
+                    batch_y, batch_query_src, batch_query_dst, batch_label = batch_data
+                batch_y = batch_y.to(device)
+                
+            num_nodes = len(batch_x_n)
+            batch_A = dglsp.spmatrix(
+                torch.cat([batch_edge_index, batch_noisy_edge_index], dim=1),
+                shape=(num_nodes, num_nodes)).to(device)
+            batch_x_n = batch_x_n.to(device)
+            batch_abs_level = batch_abs_level.to(device)
+            batch_rel_level = batch_rel_level.to(device)
+            batch_t = batch_t.to(device)
+            batch_query_src = batch_query_src.to(device)
+            batch_query_dst = batch_query_dst.to(device)
+            batch_label = batch_label.to(device)
+
+            batch_pred = model(batch_A, batch_x_n, batch_abs_level,
+                               batch_rel_level, batch_t, batch_query_src,
+                               batch_query_dst, batch_y)
+            loss = criterion(batch_pred, batch_label)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            wandb.log({'edge_pred/loss': loss.item()})
+
+    return best_state_dict
+
 def main(args):
     torch.set_num_threads(args.num_threads)
 
