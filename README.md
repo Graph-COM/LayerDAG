@@ -1,6 +1,6 @@
 # LayerDAG
 
-[[Paper]](https://openreview.net/pdf?id=IsarrieeQA)
+[[Paper]](https://arxiv.org/abs/2411.02322)
 
 ## Table of Contents
 
