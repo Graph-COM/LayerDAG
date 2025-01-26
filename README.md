@@ -66,10 +66,10 @@ export LD_LIBRARY_PATH=/home/miniconda3/envs/LayerDAG/lib:$LD_LIBRARY_PATH
 ## Citation
 
 ```
-@article{li2024layerdag,
+@inproceedings{li2024layerdag,
     title={Layer{DAG}: A Layerwise Autoregressive Diffusion Model for Directed Acyclic Graph Generation},
     author={Mufei Li and Viraj Shitole and Eli Chien and Changhai Man and Zhaodong Wang and Srinivas Sridharan and Ying Zhang and Tushar Krishna and Pan Li},
-    journal={arXiv preprint arXiv:2411.02322},
-    year={2024}
+    booktitle={International Conference on Learning Representations},
+    year={2025}
 }
 ```
